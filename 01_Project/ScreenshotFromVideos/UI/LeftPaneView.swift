@@ -129,12 +129,13 @@ struct LeftPaneView: View {
             Button {
                 vm.clear()
             } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 14))
+                Label("Unload", systemImage: "xmark.circle.fill")
+                    .labelStyle(.titleAndIcon)
+                    .font(.system(size: 13))
                     .foregroundStyle(Theme.secondaryText)
             }
             .buttonStyle(.plain)
-            .help("Remove video")
+            .help("Remove this video from the app. The source file is not deleted.")
 
             TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
                 Text(currentTimeString)
