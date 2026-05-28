@@ -20,3 +20,9 @@ xcuserdata/
 04_Exports/*.app
 04_Exports/*.dmg
 04_Exports/*.zip
+
+# Smoke-test export artifacts (PNG/JPG/HEIC frames written by the app itself)
+04_Exports/*.png
+04_Exports/*.jpg
+04_Exports/*.jpeg
+04_Exports/*.heic
