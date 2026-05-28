@@ -9,10 +9,10 @@ Decisions appear in roughly chronological order within each topic so the path of
 ## 1. Project Foundation
 
 ### Build tooling: xcodegen
-**Date:** project start (Phase 0)
-**Decision:** Drive `.xcodeproj` from `01_Project/project.yml` via xcodegen.
-**Why:** A pbxproj is unreviewable in PRs and merges badly. `project.yml` is human-readable, regenerable, and the source of truth. Regenerate with `cd 01_Project && xcodegen generate` after structural changes.
-**Consequences:** Never hand-edit pbxproj — changes vanish on next regen. New files in `ScreenshotFromVideos/` subtrees are picked up by the sources glob without a regen.
+**Date:** project start (Phase 0); regen-requirement claim corrected 2026-05-28
+**Decision:** Drive `.xcodeproj` from `01_Project/project.yml` via xcodegen. Regenerate with `cd 01_Project && xcodegen generate` after any structural change — including adding or moving a `.swift` file.
+**Why:** A pbxproj is unreviewable in PRs and merges badly. `project.yml` is human-readable, regenerable, and the source of truth.
+**Consequences:** Never hand-edit pbxproj — changes vanish on next regen. **The sources glob is resolved at `xcodegen generate` time, not at `xcodebuild` time** — so new files do NOT auto-include in the build. An earlier note in this project (and in `POLISH_PLAN_post_phase5.md`) claimed otherwise; the polish-Item-2 build failure on 2026-05-28 (`cannot find type 'ExportFormat'` on the first build after creating `Models/ExportFormat.swift`) disproved it. Any session that adds/moves a file in `ScreenshotFromVideos/` subtrees must run `xcodegen generate` before the next `xcodebuild`, or accept a build failure first.
 
 ### macOS 15.0 / Swift 6.0 / SwiftUI / notarized non-sandboxed
 **Date:** project start
@@ -229,3 +229,59 @@ Decisions appear in roughly chronological order within each topic so the path of
 **Decision:** `StripModel.scheduleRender` caps the requested times list at 256 per render batch, sorted by `abs(CMTimeGetSeconds(time) - visibleCenter)` ascending. Off-center prefetch loses first when the cap bites.
 **Why:** During fast pinch, `visibleTimeRange` is stale (it's set by scroll-geometry callback, lags zoom by frames), so `prefetchRange × new density` can compute hundreds of cells. Combined with the AVF cancellation bug above, this saturated VTDecoderXPCService at 430% CPU on a 5-min clip (within design target) and made the Mac unresponsive — user had to force-quit.
 **Emergent UX:** Cells render outward from the viewport center, which reads as a "blooming" effect — accidentally nicer than uniform fill.
+
+---
+
+## 6. Post-Phase-5 Polish — Frame-Count Preview, Multi-Format Export, Unload Clarity
+
+Three small items shipped on branch `polish/post-phase-5` on 2026-05-28. Planning, execution, and smoke all happened the same day. See `sessions/_archive/2026-05-28_POLISH_PLAN_post_phase5.md` for the original plan and `sessions/2026-05-28.md` for the execution log.
+
+### WebP omitted from SFV's format list — load-bearing
+**Date:** 2026-05-28 (planning) — confirmed in execution
+**Decision:** SFV ships PNG / JPG / HEIC. No WebP. Not now, possibly never.
+**Why:** ImageIO has no WebP write support on macOS through 26.5. Triangulated from four sources during planning:
+1. **Apple docs.** The WebP documentation collection (`developer.apple.com/documentation/imageio/webp-data`) exposes only *read* metadata keys (`kCGImagePropertyWebP*`). No write key.
+2. **Runtime probe on this Mac.** `swift /tmp/probe.swift` calling `CGImageDestinationCopyTypeIdentifiers()` returned 22 writable types. `org.webmproject.webp` was NOT among them. `public.heic`, `public.jpeg`, `public.png`, `public.tiff` were all present. Definitive for the version actually running here.
+3. **Apple Developer Forum #688001** reports `CGImageDestinationCreateWithURL(..., UTType.webP.identifier, …, nil)` returning nil on macOS 11 → 15. Unresolved by Apple. No mention of a WebP encoder in the macOS 14 / 15 / 26 release notes.
+4. **CropBatch audit.** When the user fairly pushed back ("how does CropBatch get WebP export?"), I dug: `Package.resolved` lists only Sparkle 2.8.1. No `libwebp` / `SDWebImage` / `WebPKit` / vendored xcframework / bridging header anywhere. Recursive `grep -i webp` finds only ImageIO calls. No pre-export interception, no fallback. The error from `CGImageDestinationCreateWithURL` returning nil is logged at `CropBatchApp.swift:368` and execution silently continues — **no `.webp` file is ever written.** CropBatch's README claim of WebP support is hollow. We are not replicating that bug.
+**Consequences:** If WebP becomes non-negotiable later, vendor [SDWebImageWebPCoder](https://github.com/SDWebImage/SDWebImageWebPCoder) (~200 KB libwebp), accept the notarization / hardened-runtime cost, and route only `.webp` through it while keeping ImageIO for the other three. Documented but not planned. Future-me reading this: the runtime-probe finding is the load-bearing evidence — re-run the probe before assuming Apple has fixed this.
+
+### `ExportFormat` enum with `.jpg` extension override
+**Date:** 2026-05-28
+**Decision:** `ExportFormat.fileExtension` hardcodes `.jpeg → "jpg"`. Other cases use the preferred extension as-is.
+**Why:** `UTType.jpeg.preferredFilenameExtension` returns `"jpeg"`, but macOS Finder, web upload forms, and human convention all expect `.jpg`. Confirmed in smoke — exported files are `*.jpg`. The override is cleaner than rewriting elsewhere.
+
+### Single shared quality across JPG and HEIC
+**Date:** 2026-05-28
+**Decision:** One `exportQuality: Double` value persisted in Preferences, shared between JPG and HEIC. Not per-format.
+**Why:** Simpler UI (one slider), simpler Preferences (one key), simpler mental model. Alternative would be `{ jpeg: 0.85, heic: 0.75 }` since HEIC's quality scale produces visibly different file sizes from JPEG's at the same value, but: (a) the typical use case is "pick a format, then tune quality once", not constant switching; (b) HEIC files at 0.85 came out reasonable in smoke. Revisit only if HEIC files come out too big in real use.
+
+### PNG default; quality slider hidden (not disabled) when PNG
+**Date:** 2026-05-28
+**Decision:** First-run default is PNG. Quality slider row is hidden via `if vm.exportFormat.supportsCompression { ... }`, not just `.disabled(...)`-grey'd.
+**Why (PNG default):** Preserves prior behavior on first launch — pre-existing users see no behavior change.
+**Why (hidden, not disabled):** A grey'd-out slider invites the question "what value would that be if I could move it?" — but the answer is "nothing, PNG is always lossless." Removing the row entirely is unambiguous. The layout shift is small (one row) and the slider's quality value is preserved in Preferences regardless of visibility, so switching PNG → JPG → PNG → JPG doesn't reset it.
+
+### Format section sits between Output and Options
+**Date:** 2026-05-28
+**Decision:** `formatSection` is a top-level section in `RightPaneView`'s scroll stack, between `outputSection` and `optionsSection`. NOT nested inside the existing Options DisclosureGroup.
+**Why:** Read top-to-bottom as "what / when / where / how": Mode → Params → Output → Format → Options. Format materially changes file size and on-disk extension; it belongs alongside the destination folder, not nested under "Options" (which is about cosmetic post-processing like overlay and numbering).
+
+### "Unload" label, no menu item, no confirmation dialog
+**Date:** 2026-05-28
+**Decision:** Footer ✕ icon → `Label("Unload", systemImage: "xmark.circle.fill")` with `.labelStyle(.titleAndIcon)`. No `File > Close Video` menu item. No confirmation dialog.
+**Why (label):** "Unload" is the standard term in media tools. "Close Video" would conflict with ⌘W (window close). "Remove" sounds destructive to the source file. Tooltip explicitly clarifies "The source file is not deleted."
+**Why (no menu item):** ⌘W is already taken. A menu item without a shortcut is pure clutter; the labeled footer button is discoverable enough.
+**Why (no confirmation dialog):** The operation is non-destructive by design — `manualTimes` is intentionally transient (output folder, options, overlay, etc. all persist). A dialog would be friction without value.
+
+### Frame-count preview placement and pluralization
+**Date:** 2026-05-28
+**Decision:** New `Text("\(n) frame\(n == 1 ? "" : "s") will be exported")` row at the *top* of `exportFooter`'s VStack, gated on `vm.metadata != nil && !vm.isRunning`. Native English pluralization via ternary — no `String.localizedStringWithFormat`.
+**Why (placement):** First child of the footer, so the magnitude reads immediately before the Export button. During export, the existing progress UI takes that space and the count row hides; on launch, no metadata means no row.
+**Why (visible at 0):** The "0 frames will be exported" state is informative (it tells the user *why* the Export button is disabled — empty Manual list, or interval = 0). Hiding it would force the user to guess.
+**Why (no localization):** App is English-only.
+
+### Factor mode resolution into a `currentMode` computed
+**Date:** 2026-05-28
+**Decision:** `ExtractionViewModel.currentMode: ExtractionMode?` is the single resolver for "do the UI fields currently describe a valid mode?". Both `previewFrameCount` and `buildRequest()` read from it.
+**Why:** Item 1 added the count preview, which needed the same `tab / intervalUnit / intervalSeconds / intervalFrames / manualTimes` → `ExtractionMode` resolution that `buildRequest()` was already doing inline. Factoring out the resolver collapsed `buildRequest()` from ~20 lines to 9 and made the two paths impossible to drift. Returns `nil` for incomplete selections (zero interval, empty manual list) — both callers handle nil the same way (no count / no request).
