@@ -113,6 +113,31 @@ final class ExtractionViewModel {
 
     var capturedCount: Int { manualTimes.count }
 
+    /// Resolves the discrete UI fields (tab/intervalUnit/...) into the locked
+    /// ExtractionMode used by both the export request and the frame-count
+    /// preview. Returns nil when the current selection wouldn't produce any
+    /// frames (zero interval, empty manual list, etc.).
+    var currentMode: ExtractionMode? {
+        switch tab {
+        case .interval:
+            switch intervalUnit {
+            case .seconds:
+                return intervalSeconds > 0 ? .interval(seconds: intervalSeconds) : nil
+            case .frames:
+                return intervalFrames > 0 ? .intervalFrames(count: intervalFrames) : nil
+            }
+        case .manual:
+            return manualTimes.isEmpty ? nil : .timestamps(manualTimes)
+        }
+    }
+
+    /// Number of frames the current settings would export. 0 when no clip is
+    /// loaded or the mode is incomplete.
+    var previewFrameCount: Int {
+        guard let metadata, let mode = currentMode else { return 0 }
+        return TimeListGenerator.count(for: mode, duration: metadata.duration, fps: metadata.nominalFrameRate)
+    }
+
     // MARK: - Source loading
 
     func load(_ url: URL) async {
@@ -222,24 +247,7 @@ final class ExtractionViewModel {
     // MARK: - Request builder
 
     private func buildRequest() -> ExtractionRequest? {
-        guard let sourceURL, let outputFolder else { return nil }
-
-        let mode: ExtractionMode
-        switch tab {
-        case .interval:
-            switch intervalUnit {
-            case .seconds:
-                guard intervalSeconds > 0 else { return nil }
-                mode = .interval(seconds: intervalSeconds)
-            case .frames:
-                guard intervalFrames > 0 else { return nil }
-                mode = .intervalFrames(count: intervalFrames)
-            }
-        case .manual:
-            guard !manualTimes.isEmpty else { return nil }
-            mode = .timestamps(manualTimes)
-        }
-
+        guard let sourceURL, let outputFolder, let mode = currentMode else { return nil }
         return ExtractionRequest(
             sourceURL: sourceURL,
             outputFolder: outputFolder,

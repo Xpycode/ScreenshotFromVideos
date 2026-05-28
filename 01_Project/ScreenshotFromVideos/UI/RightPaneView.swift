@@ -259,6 +259,13 @@ struct RightPaneView: View {
 
     private var exportFooter: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if vm.metadata != nil && !vm.isRunning {
+                let n = vm.previewFrameCount
+                Text("\(n) frame\(n == 1 ? "" : "s") will be exported")
+                    .font(.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+
             if vm.isRunning, let p = vm.progress {
                 ProgressView(value: vm.progressFraction)
                     .progressViewStyle(.linear)

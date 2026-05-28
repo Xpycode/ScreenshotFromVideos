@@ -43,4 +43,22 @@ enum TimeListGenerator {
             return result.map { CMTime(seconds: $0, preferredTimescale: timescale) }
         }
     }
+
+    /// Number of frames `times(for:duration:fps:)` would produce. Pure arithmetic
+    /// for the interval modes; delegates to `times(...).count` for manual mode
+    /// (small N — same clamp/dedupe path).
+    static func count(for mode: ExtractionMode, duration: Double, fps: Float = 30) -> Int {
+        guard duration > 0 else { return 0 }
+        switch mode {
+        case .interval(let seconds):
+            guard seconds > 0 else { return 0 }
+            return Int((duration / seconds).rounded(.down)) + 1
+        case .intervalFrames(let count):
+            guard count > 0, fps > 0 else { return 0 }
+            let step = Double(count) / Double(fps)
+            return Int((duration / step).rounded(.down)) + 1
+        case .timestamps:
+            return times(for: mode, duration: duration, fps: fps).count
+        }
+    }
 }
