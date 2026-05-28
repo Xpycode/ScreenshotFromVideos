@@ -39,6 +39,9 @@ struct RightPaneView: View {
                     outputSection
                     sectionDivider
 
+                    formatSection
+                    sectionDivider
+
                     optionsSection
                 }
                 .padding(16)
@@ -253,6 +256,37 @@ struct RightPaneView: View {
         {date} — YYYY-MM-DD at export time
         {time} — HH-MM-SS at export time
         """
+    }
+
+    // MARK: - 5b. Format
+
+    private var formatSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("Format")
+
+            HStack(spacing: 6) {
+                ForEach(ExportFormat.allCases) { fmt in
+                    Button(fmt.rawValue) { vm.exportFormat = fmt }
+                        .buttonStyle(.bordered)
+                        .tint(vm.exportFormat == fmt ? .accentColor : .secondary)
+                        .controlSize(.small)
+                }
+            }
+
+            if vm.exportFormat.supportsCompression {
+                HStack(spacing: 8) {
+                    Text("Quality")
+                        .font(.callout)
+                        .foregroundStyle(Theme.secondaryText)
+                    Slider(value: $vm.exportQuality, in: 0.1...1.0, step: 0.05)
+                        .controlSize(.small)
+                    Text("\(Int((vm.exportQuality * 100).rounded()))%")
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(Theme.secondaryText)
+                        .frame(width: 40, alignment: .trailing)
+                }
+            }
+        }
     }
 
     // MARK: - 6. Export footer

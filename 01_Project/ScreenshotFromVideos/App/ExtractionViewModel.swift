@@ -69,6 +69,12 @@ final class ExtractionViewModel {
     var numbering: NumberingSettings {
         didSet { Preferences.setNumbering(numbering) }
     }
+    var exportFormat: ExportFormat {
+        didSet { Preferences.setExportFormat(exportFormat) }
+    }
+    var exportQuality: Double {
+        didSet { Preferences.setExportQuality(exportQuality) }
+    }
 
     // MARK: Status (transient)
     var progress: ExtractionPipeline.Progress?
@@ -92,6 +98,8 @@ final class ExtractionViewModel {
         self.intervalFrames  = Preferences.intervalFrames()
         self.overlay         = Preferences.overlay()
         self.numbering       = Preferences.numbering()
+        self.exportFormat    = Preferences.exportFormat()
+        self.exportQuality   = Preferences.exportQuality()
     }
 
     // MARK: - Computed
@@ -253,7 +261,9 @@ final class ExtractionViewModel {
             outputFolder: outputFolder,
             mode: mode,
             overlay: overlay,
-            numbering: numbering
+            numbering: numbering,
+            format: exportFormat,
+            quality: exportQuality
         )
     }
 }

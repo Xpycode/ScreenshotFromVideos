@@ -37,6 +37,8 @@ enum Preferences {
         static let numberingPattern  = "numbering.pattern"
         static let numberingStart    = "numbering.startIndex"
         static let numberingPadding  = "numbering.zeroPadding"
+        static let exportFormat      = "exportFormat"
+        static let exportQuality     = "exportQuality"
     }
 
     // MARK: - Reads (used in ExtractionViewModel.init)
@@ -93,6 +95,17 @@ enum Preferences {
         return s
     }
 
+    static func exportFormat() -> ExportFormat {
+        ExportFormat(rawValue: defaults.string(forKey: Key.exportFormat) ?? "") ?? .png
+    }
+
+    static func exportQuality() -> Double {
+        // 0.0 is a valid (worst-quality) value but our slider clamps to 0.1;
+        // treat missing/zero as the default 0.85 since the default was never written.
+        let v = defaults.double(forKey: Key.exportQuality)
+        return v > 0 ? v : 0.85
+    }
+
     // MARK: - Writes (used in ExtractionViewModel didSet handlers)
 
     static func setOutputFolder(_ url: URL?) {
@@ -126,5 +139,13 @@ enum Preferences {
         defaults.set(n.templater.pattern, forKey: Key.numberingPattern)
         defaults.set(n.templater.startIndex, forKey: Key.numberingStart)
         defaults.set(n.templater.zeroPadding, forKey: Key.numberingPadding)
+    }
+
+    static func setExportFormat(_ f: ExportFormat) {
+        defaults.set(f.rawValue, forKey: Key.exportFormat)
+    }
+
+    static func setExportQuality(_ q: Double) {
+        defaults.set(q, forKey: Key.exportQuality)
     }
 }

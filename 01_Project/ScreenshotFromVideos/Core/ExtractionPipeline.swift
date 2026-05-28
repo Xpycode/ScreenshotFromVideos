@@ -87,7 +87,7 @@ enum ExtractionPipeline {
                     let url = ImageExportService.nextAvailableURL(
                         folder: request.outputFolder,
                         basename: basename,
-                        ext: "png"
+                        ext: request.format.fileExtension
                     )
 
                     // NSBitmapImageRep + CGImageDestination are Obj-C and may
@@ -95,7 +95,12 @@ enum ExtractionPipeline {
                     var writeError: Error?
                     autoreleasepool {
                         do {
-                            try ImageExportService.writePNG(final, to: url)
+                            try ImageExportService.writeImage(
+                                final,
+                                to: url,
+                                format: request.format,
+                                quality: request.quality
+                            )
                         } catch {
                             writeError = error
                         }

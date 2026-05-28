@@ -15,6 +15,8 @@ struct ExtractionRequest {
     var mode: ExtractionMode
     var overlay: OverlaySettings
     var numbering: NumberingSettings
+    var format: ExportFormat = .png
+    var quality: Double = 0.85
     var tolerance: CMTime = .zero
 }
 

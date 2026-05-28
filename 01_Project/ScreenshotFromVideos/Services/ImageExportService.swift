@@ -50,16 +50,21 @@ enum ImageExportService {
         }
     }
 
-    /// Writes a CGImage to disk as PNG.
-    static func writePNG(_ cgImage: CGImage, to url: URL) throws {
+    /// Writes a CGImage to disk in the requested format. `quality` is honored
+    /// only for `format.supportsCompression` (JPEG, HEIC); ignored for PNG.
+    static func writeImage(_ cgImage: CGImage, to url: URL, format: ExportFormat, quality: Double) throws {
         guard let destination = CGImageDestinationCreateWithURL(
             url as CFURL,
-            UTType.png.identifier as CFString,
+            format.utType.identifier as CFString,
             1,
             nil
         ) else { throw ImageExportError.failedToCreateDestination }
 
-        CGImageDestinationAddImage(destination, cgImage, nil)
+        var options: [CFString: Any] = [:]
+        if format.supportsCompression {
+            options[kCGImageDestinationLossyCompressionQuality] = max(0, min(1, quality))
+        }
+        CGImageDestinationAddImage(destination, cgImage, options.isEmpty ? nil : options as CFDictionary)
 
         guard CGImageDestinationFinalize(destination) else {
             throw ImageExportError.failedToWriteImage
