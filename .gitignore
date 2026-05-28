@@ -1,0 +1,22 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# xcodegen output (regenerated from project.yml)
+01_Project/*.xcodeproj
+01_Project/ScreenshotFromVideos/Info.plist
+
+# macOS
+.DS_Store
+
+# Claude Code (user-specific)
+.claude/settings.local.json
+
+# Build artifacts
+04_Exports/*.app
+04_Exports/*.dmg
+04_Exports/*.zip
