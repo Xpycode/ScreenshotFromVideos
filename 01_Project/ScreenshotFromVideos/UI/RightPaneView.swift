@@ -273,9 +273,18 @@ struct RightPaneView: View {
                 }
             }
 
+            if vm.exportFormat.hasLosslessOption {
+                Toggle("Lossless", isOn: $vm.exportLossless)
+                    .controlSize(.small)
+                    .help("Lossless WebP — bit-exact pixels, typically 25–35% smaller than PNG. The Quality slider becomes encoding effort: higher = smaller file, slower encode.")
+            }
+
             if vm.exportFormat.supportsCompression {
+                // In WebP lossless mode libwebp reuses `quality` as encoding
+                // effort, so the label flips — backing variable stays exportQuality.
+                let isEffort = vm.exportFormat == .webp && vm.exportLossless
                 HStack(spacing: 8) {
-                    Text("Quality")
+                    Text(isEffort ? "Effort" : "Quality")
                         .font(.callout)
                         .foregroundStyle(Theme.secondaryText)
                     Slider(value: $vm.exportQuality, in: 0.1...1.0, step: 0.05)
