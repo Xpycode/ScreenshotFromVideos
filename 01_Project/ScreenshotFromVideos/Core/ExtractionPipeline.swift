@@ -99,7 +99,8 @@ enum ExtractionPipeline {
                                 final,
                                 to: url,
                                 format: request.format,
-                                quality: request.quality
+                                quality: request.quality,
+                                lossless: request.lossless
                             )
                         } catch {
                             writeError = error

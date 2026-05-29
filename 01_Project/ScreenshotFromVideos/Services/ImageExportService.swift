@@ -51,8 +51,15 @@ enum ImageExportService {
     }
 
     /// Writes a CGImage to disk in the requested format. `quality` is honored
-    /// only for `format.supportsCompression` (JPEG, HEIC); ignored for PNG.
-    static func writeImage(_ cgImage: CGImage, to url: URL, format: ExportFormat, quality: Double) throws {
+    /// only for `format.supportsCompression` (JPEG, HEIC, WebP); ignored for
+    /// PNG. `lossless` applies to WebP only. WebP routes through WebPEncoder
+    /// (SDWebImageWebPCoder) since ImageIO can't write it on macOS through 26.5.
+    static func writeImage(_ cgImage: CGImage, to url: URL, format: ExportFormat, quality: Double, lossless: Bool) throws {
+        if format == .webp {
+            try WebPEncoder.encode(cgImage, to: url, quality: quality, lossless: lossless)
+            return
+        }
+
         guard let destination = CGImageDestinationCreateWithURL(
             url as CFURL,
             format.utType.identifier as CFString,

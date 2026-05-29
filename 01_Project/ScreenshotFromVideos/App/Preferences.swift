@@ -39,6 +39,7 @@ enum Preferences {
         static let numberingPadding  = "numbering.zeroPadding"
         static let exportFormat      = "exportFormat"
         static let exportQuality     = "exportQuality"
+        static let exportLossless    = "exportLossless"
     }
 
     // MARK: - Reads (used in ExtractionViewModel.init)
@@ -106,6 +107,11 @@ enum Preferences {
         return v > 0 ? v : 0.85
     }
 
+    static func exportLossless() -> Bool {
+        // Missing key → false, which is the right default (lossy WebP).
+        defaults.bool(forKey: Key.exportLossless)
+    }
+
     // MARK: - Writes (used in ExtractionViewModel didSet handlers)
 
     static func setOutputFolder(_ url: URL?) {
@@ -147,5 +153,9 @@ enum Preferences {
 
     static func setExportQuality(_ q: Double) {
         defaults.set(q, forKey: Key.exportQuality)
+    }
+
+    static func setExportLossless(_ v: Bool) {
+        defaults.set(v, forKey: Key.exportLossless)
     }
 }

@@ -2,10 +2,10 @@
 //  ExportFormat.swift
 //  ScreenshotFromVideos
 //
-//  Image output format for extracted frames. PNG/JPG/HEIC only.
-//  Lifted shape from CropBatch/Models/ExportSettings.swift (TIFF + WebP
-//  dropped — WebP has no ImageIO write support on macOS through 26.5;
-//  see docs/decisions.md / POLISH_PLAN_post_phase5.md).
+//  Image output format for extracted frames. PNG/JPG/HEIC via ImageIO; WebP
+//  added in the webp-support polish (uses SDWebImageWebPCoder, not ImageIO —
+//  ImageIO has no WebP write support on macOS through 26.5). Lifted shape from
+//  CropBatch/Models/ExportSettings.swift (TIFF dropped).
 //
 
 import Foundation
@@ -15,6 +15,7 @@ enum ExportFormat: String, CaseIterable, Identifiable, Codable {
     case png  = "PNG"
     case jpeg = "JPG"
     case heic = "HEIC"
+    case webp = "WebP"
 
     var id: String { rawValue }
 
@@ -23,6 +24,7 @@ enum ExportFormat: String, CaseIterable, Identifiable, Codable {
         case .png:  return .png
         case .jpeg: return .jpeg
         case .heic: return .heic
+        case .webp: return .webP  // kept for completeness; WebP write goes via WebPEncoder, not ImageIO
         }
     }
 
@@ -33,13 +35,18 @@ enum ExportFormat: String, CaseIterable, Identifiable, Codable {
         case .png:  return "png"
         case .jpeg: return "jpg"
         case .heic: return "heic"
+        case .webp: return "webp"
         }
     }
 
     var supportsCompression: Bool {
         switch self {
-        case .jpeg, .heic: return true
-        case .png:         return false
+        case .jpeg, .heic, .webp: return true
+        case .png:                return false
         }
     }
+
+    /// WebP is the only format exposing a lossless toggle. Gates the UI control
+    /// and the Quality↔Effort label flip in RightPaneView.
+    var hasLosslessOption: Bool { self == .webp }
 }

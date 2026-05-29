@@ -17,6 +17,7 @@ struct ExtractionRequest {
     var numbering: NumberingSettings
     var format: ExportFormat = .png
     var quality: Double = 0.85
+    var lossless: Bool = false  // WebP only; ignored by PNG/JPG/HEIC
     var tolerance: CMTime = .zero
 }
 

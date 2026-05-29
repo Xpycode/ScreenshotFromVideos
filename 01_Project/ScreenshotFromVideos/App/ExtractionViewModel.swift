@@ -75,6 +75,9 @@ final class ExtractionViewModel {
     var exportQuality: Double {
         didSet { Preferences.setExportQuality(exportQuality) }
     }
+    var exportLossless: Bool {
+        didSet { Preferences.setExportLossless(exportLossless) }
+    }
 
     // MARK: Status (transient)
     var progress: ExtractionPipeline.Progress?
@@ -100,6 +103,7 @@ final class ExtractionViewModel {
         self.numbering       = Preferences.numbering()
         self.exportFormat    = Preferences.exportFormat()
         self.exportQuality   = Preferences.exportQuality()
+        self.exportLossless  = Preferences.exportLossless()
     }
 
     // MARK: - Computed
@@ -236,7 +240,7 @@ final class ExtractionViewModel {
                 let urls = try await ExtractionPipeline.run(request) { update in
                     self.progress = update
                 }
-                self.statusMessage = "Done — wrote \(urls.count) PNG\(urls.count == 1 ? "" : "s")"
+                self.statusMessage = "Done — wrote \(urls.count) \(request.format.rawValue)\(urls.count == 1 ? "" : "s")"
             } catch is CancellationError {
                 self.statusMessage = "Cancelled — partial frames remain on disk"
             } catch {
@@ -263,7 +267,8 @@ final class ExtractionViewModel {
             overlay: overlay,
             numbering: numbering,
             format: exportFormat,
-            quality: exportQuality
+            quality: exportQuality,
+            lossless: exportLossless
         )
     }
 }
