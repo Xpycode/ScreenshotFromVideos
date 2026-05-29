@@ -276,7 +276,7 @@ struct RightPaneView: View {
             if vm.exportFormat.hasLosslessOption {
                 Toggle("Lossless", isOn: $vm.exportLossless)
                     .controlSize(.small)
-                    .help("Lossless WebP — bit-exact pixels, typically 25–35% smaller than PNG. The Quality slider becomes encoding effort: higher = smaller file, slower encode.")
+                    .help("Lossless WebP — visually identical to the source (within ~2%), typically ~55% smaller than PNG. The Quality slider becomes encoding effort: higher = smaller file, slower encode.")
             }
 
             if vm.exportFormat.supportsCompression {
