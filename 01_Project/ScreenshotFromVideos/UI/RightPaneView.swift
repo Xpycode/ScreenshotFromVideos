@@ -280,16 +280,18 @@ struct RightPaneView: View {
             }
 
             if vm.exportFormat.supportsCompression {
-                // In WebP lossless mode libwebp reuses `quality` as encoding
-                // effort, so the label flips — backing variable stays exportQuality.
+                // In WebP lossless mode the slider means encoding effort, not
+                // quality — so it flips its label AND binds to a separate value
+                // (exportEffort) so JPG/HEIC/WebP-lossy quality isn't clobbered.
                 let isEffort = vm.exportFormat == .webp && vm.exportLossless
+                let value = isEffort ? $vm.exportEffort : $vm.exportQuality
                 HStack(spacing: 8) {
                     Text(isEffort ? "Effort" : "Quality")
                         .font(.callout)
                         .foregroundStyle(Theme.secondaryText)
-                    Slider(value: $vm.exportQuality, in: 0.1...1.0, step: 0.05)
+                    Slider(value: value, in: 0.1...1.0, step: 0.05)
                         .controlSize(.small)
-                    Text("\(Int((vm.exportQuality * 100).rounded()))%")
+                    Text("\(Int((value.wrappedValue * 100).rounded()))%")
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(Theme.secondaryText)
                         .frame(width: 40, alignment: .trailing)

@@ -78,6 +78,12 @@ final class ExtractionViewModel {
     var exportLossless: Bool {
         didSet { Preferences.setExportLossless(exportLossless) }
     }
+    /// WebP-lossless encoding effort. Separate from exportQuality because the
+    /// slider means a different thing in lossless mode (effort, not quality);
+    /// JPG/HEIC/WebP-lossy keep sharing exportQuality.
+    var exportEffort: Double {
+        didSet { Preferences.setExportEffort(exportEffort) }
+    }
 
     // MARK: Status (transient)
     var progress: ExtractionPipeline.Progress?
@@ -104,6 +110,7 @@ final class ExtractionViewModel {
         self.exportFormat    = Preferences.exportFormat()
         self.exportQuality   = Preferences.exportQuality()
         self.exportLossless  = Preferences.exportLossless()
+        self.exportEffort    = Preferences.exportEffort()
     }
 
     // MARK: - Computed
@@ -260,6 +267,9 @@ final class ExtractionViewModel {
 
     private func buildRequest() -> ExtractionRequest? {
         guard let sourceURL, let outputFolder, let mode = currentMode else { return nil }
+        // libwebp reuses the quality param as effort when lossless, so feed it
+        // the effort value in that mode; everything else uses exportQuality.
+        let isWebPLossless = exportFormat == .webp && exportLossless
         return ExtractionRequest(
             sourceURL: sourceURL,
             outputFolder: outputFolder,
@@ -267,7 +277,7 @@ final class ExtractionViewModel {
             overlay: overlay,
             numbering: numbering,
             format: exportFormat,
-            quality: exportQuality,
+            quality: isWebPLossless ? exportEffort : exportQuality,
             lossless: exportLossless
         )
     }

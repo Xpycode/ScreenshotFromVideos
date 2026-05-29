@@ -40,6 +40,7 @@ enum Preferences {
         static let exportFormat      = "exportFormat"
         static let exportQuality     = "exportQuality"
         static let exportLossless    = "exportLossless"
+        static let exportEffort      = "exportEffort"
     }
 
     // MARK: - Reads (used in ExtractionViewModel.init)
@@ -112,6 +113,13 @@ enum Preferences {
         defaults.bool(forKey: Key.exportLossless)
     }
 
+    static func exportEffort() -> Double {
+        // WebP-lossless encoding effort, stored separately from exportQuality
+        // since the two are different axes (effort: higher = smaller + slower).
+        let v = defaults.double(forKey: Key.exportEffort)
+        return v > 0 ? v : 0.75
+    }
+
     // MARK: - Writes (used in ExtractionViewModel didSet handlers)
 
     static func setOutputFolder(_ url: URL?) {
@@ -157,5 +165,9 @@ enum Preferences {
 
     static func setExportLossless(_ v: Bool) {
         defaults.set(v, forKey: Key.exportLossless)
+    }
+
+    static func setExportEffort(_ v: Double) {
+        defaults.set(v, forKey: Key.exportEffort)
     }
 }
