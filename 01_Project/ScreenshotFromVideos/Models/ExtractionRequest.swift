@@ -30,7 +30,10 @@ enum ExtractionMode {
 struct OverlaySettings {
     var enabled: Bool = false
     var position: OverlayPosition = .bottomLeft
-    var fontSize: CGFloat = 36
+    /// Burn-in font height as a fraction of the frame height, so the timestamp
+    /// stays legible at any resolution (an absolute point size is invisibly
+    /// small on a 4K frame). Resolved to pixels at render time. Default 3.5%.
+    var fontPercent: Double = 0.035
 }
 
 struct NumberingSettings {

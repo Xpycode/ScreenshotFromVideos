@@ -224,11 +224,11 @@ struct RightPaneView: View {
                                 .font(.caption)
                                 .foregroundStyle(Theme.secondaryText)
                             Spacer()
-                            Text("\(Int(vm.overlay.fontSize))pt")
+                            Text("\(vm.overlay.fontPercent * 100, specifier: "%.1f")% of height")
                                 .font(.caption.monospacedDigit())
                                 .foregroundStyle(Theme.secondaryText)
                         }
-                        Slider(value: $vm.overlay.fontSize, in: 16...96)
+                        Slider(value: $vm.overlay.fontPercent, in: 0.01...0.08)
                             .disabled(!vm.overlay.enabled)
                     }
 

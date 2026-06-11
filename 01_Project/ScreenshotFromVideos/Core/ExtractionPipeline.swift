@@ -67,7 +67,8 @@ enum ExtractionPipeline {
                             image,
                             text: TimestampFormatter.string(from: requested),
                             position: request.overlay.position,
-                            fontSize: request.overlay.fontSize
+                            // Fraction-of-height → absolute pixels for this frame.
+                            fontSize: CGFloat(image.height) * CGFloat(request.overlay.fontPercent)
                         )
                     } else {
                         final = image

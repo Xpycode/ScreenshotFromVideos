@@ -32,7 +32,7 @@ enum Preferences {
         static let intervalFrames    = "intervalFrames"
         static let overlayEnabled    = "overlay.enabled"
         static let overlayPosition   = "overlay.position"
-        static let overlayFontSize   = "overlay.fontSize"
+        static let overlayFontPercent = "overlay.fontPercent"
         static let numberingEnabled  = "numbering.enabled"
         static let numberingPattern  = "numbering.pattern"
         static let numberingStart    = "numbering.startIndex"
@@ -77,8 +77,8 @@ enum Preferences {
            let pos = OverlayPosition(rawValue: raw) {
             s.position = pos
         }
-        let fontSize = defaults.double(forKey: Key.overlayFontSize)
-        if fontSize > 0 { s.fontSize = CGFloat(fontSize) }
+        let fontPercent = defaults.double(forKey: Key.overlayFontPercent)
+        if fontPercent > 0 { s.fontPercent = fontPercent }
         return s
     }
 
@@ -145,7 +145,7 @@ enum Preferences {
     static func setOverlay(_ o: OverlaySettings) {
         defaults.set(o.enabled, forKey: Key.overlayEnabled)
         defaults.set(o.position.rawValue, forKey: Key.overlayPosition)
-        defaults.set(Double(o.fontSize), forKey: Key.overlayFontSize)
+        defaults.set(o.fontPercent, forKey: Key.overlayFontPercent)
     }
 
     static func setNumbering(_ n: NumberingSettings) {
