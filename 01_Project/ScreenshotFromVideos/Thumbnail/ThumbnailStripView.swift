@@ -30,6 +30,9 @@ struct ThumbnailStripView: View {
     // Columns visible per row, tracked from scroll geometry so ↑/↓ arrow
     // navigation can step a whole row instead of a single cell.
     @State private var cellsPerRow: Int = 1
+    // Reflects player.timeControlStatus so the transport bar's play/pause icon
+    // stays correct even when playback stops on its own (reaches end).
+    @State private var isPlaying: Bool = false
 
     private var cellW: CGFloat { model.thumbWidth }
     private var cellH: CGFloat { cellW * 9.0 / 16.0 }
@@ -38,9 +41,94 @@ struct ThumbnailStripView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            transportBar
             grid
             zoomControlRow
         }
+    }
+
+    // MARK: - Transport bar (play/pause · selected-frame timecode · zoom scale)
+
+    private var transportBar: some View {
+        HStack(spacing: 12) {
+            Button {
+                togglePlayPause()
+            } label: {
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 15))
+                    .frame(width: 16)
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .foregroundStyle(Theme.primaryText)
+            .help(isPlaying ? "Pause" : "Play")
+
+            // Selected frame: frame-accurate timecode + absolute frame index.
+            // The frame number rides in a worst-case-width field (hidden
+            // template) so the right-hand scale doesn't jitter as it ticks.
+            HStack(spacing: 6) {
+                Text(timecodeString)
+                Text("·")
+                    .foregroundStyle(Theme.secondaryText)
+                ZStack(alignment: .leading) {
+                    Text("frame \(totalFrames)").hidden()
+                    Text("frame \(frameNumber)")
+                }
+                .foregroundStyle(Theme.secondaryText)
+            }
+            .font(.system(size: 14, weight: .thin).monospacedDigit())
+
+            Spacer()
+
+            // Zoom scale: how many source frames fall between two thumbnails,
+            // plus the real-time gap. Collapses to "every frame · 1:1" at max.
+            HStack(spacing: 5) {
+                Image(systemName: "ruler")
+                    .font(.system(size: 10))
+                Text(scaleString)
+            }
+            .font(.system(size: 11, weight: .regular).monospacedDigit())
+            .foregroundStyle(Theme.secondaryText)
+            .help("Spacing between thumbnails at the current zoom")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Theme.secondaryBackground)
+    }
+
+    private var timecodeString: String {
+        TimestampFormatter.timecode(from: currentTime, fps: model.nominalFPS)
+    }
+
+    private var frameNumber: Int {
+        TimestampFormatter.frameNumber(from: currentTime, fps: model.nominalFPS)
+    }
+
+    private var totalFrames: Int {
+        TimestampFormatter.frameNumber(
+            from: CMTime(seconds: model.duration, preferredTimescale: 600),
+            fps: model.nominalFPS
+        )
+    }
+
+    private var scaleString: String {
+        let n = model.framesPerThumbnail
+        if n <= 1 { return "every frame · 1:1" }
+        let secs = model.secondsPerThumbnail
+        let gap = secs < 1
+            ? String(format: "%.0fms", secs * 1000)
+            : String(format: "%.2fs", secs)
+        return "every \(n) fr · \(gap)"
+    }
+
+    private func togglePlayPause() {
+        guard let player else { return }
+        if player.timeControlStatus == .playing {
+            player.pause()
+        } else {
+            player.play()
+        }
+        stripFocused = true
     }
 
     private var grid: some View {
@@ -181,6 +269,9 @@ struct ThumbnailStripView: View {
         .task(id: playerIdentity) {
             await observePlayerTime()
         }
+        .task(id: playerIdentity) {
+            await observePlaybackStatus()
+        }
         .task {
             await monitorCmdScrollWheel()
         }
@@ -318,6 +409,17 @@ struct ThumbnailStripView: View {
             try await Task.sleep(nanoseconds: .max)
         } catch {
             // cancelled — defer cleans up
+        }
+    }
+
+    // Mirror AVPlayer's play/pause state into `isPlaying` via KVO so the
+    // transport icon is correct even when playback ends on its own (the
+    // periodic time observer stops firing once the timebase halts).
+    private func observePlaybackStatus() async {
+        guard let player else { return }
+        isPlaying = player.timeControlStatus == .playing
+        for await status in player.publisher(for: \.timeControlStatus).values {
+            isPlaying = status == .playing
         }
     }
 }

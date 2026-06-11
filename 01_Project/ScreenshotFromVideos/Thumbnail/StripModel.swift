@@ -50,6 +50,17 @@ final class StripModel {
 
     var pointsPerSecond: CGFloat { thumbWidth * CGFloat(density) }
 
+    /// Source frames skipped between two adjacent thumbnails at the current
+    /// zoom (≥ 1). At max zoom this reaches 1 ("every frame") for any source,
+    /// since `density` caps at the clip's frame rate.
+    var framesPerThumbnail: Int {
+        guard density > 0 else { return 1 }
+        return max(1, Int((Double(nominalFPS) / density).rounded()))
+    }
+
+    /// Real-time gap between two adjacent thumbnails, in seconds.
+    var secondsPerThumbnail: Double { density > 0 ? 1.0 / density : 0 }
+
     var totalContentWidth: CGFloat { CGFloat(duration) * pointsPerSecond }
 
     func thumbnailTimes(in range: ClosedRange<Double>) -> [CMTime] {

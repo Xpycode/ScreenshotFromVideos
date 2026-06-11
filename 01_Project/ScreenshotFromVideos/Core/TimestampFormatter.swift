@@ -25,4 +25,27 @@ enum TimestampFormatter {
         }
         return String(format: "%02d:%02d.%03d", minutes, seconds, millis)
     }
+
+    /// Frame-accurate timecode "HH:MM:SS:FF" (non-drop). FF is the frame index
+    /// within the current second. Used by the strip's transport bar so the user
+    /// sees exactly which frame the playhead — and therefore Capture — will grab.
+    static func timecode(from time: CMTime, fps: Float) -> String {
+        let total = CMTimeGetSeconds(time)
+        guard total.isFinite, total >= 0, fps > 0 else { return "00:00:00:00" }
+        let f = Int(fps.rounded())
+        let totalFrames = Int((total * Double(fps)).rounded())
+        let frames = totalFrames % f
+        let secs = (totalFrames / f) % 60
+        let minutes = (totalFrames / (f * 60)) % 60
+        let hours = totalFrames / (f * 3600)
+        return String(format: "%02d:%02d:%02d:%02d", hours, minutes, secs, frames)
+    }
+
+    /// Absolute frame index from the start of the clip (0-based), rounded to the
+    /// nearest frame so it matches the frame a sample-accurate seek lands on.
+    static func frameNumber(from time: CMTime, fps: Float) -> Int {
+        let total = CMTimeGetSeconds(time)
+        guard total.isFinite, total >= 0, fps > 0 else { return 0 }
+        return Int((total * Double(fps)).rounded())
+    }
 }
