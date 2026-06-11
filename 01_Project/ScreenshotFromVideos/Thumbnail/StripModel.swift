@@ -35,7 +35,11 @@ final class StripModel {
     }
 
     var density: Double {
-        let cap = min(Double(nominalFPS), 30.0)
+        // Cap at the source frame rate so max zoom reaches 1:1 (every frame),
+        // even for 60 fps clips. Below the cap, density grows ~exponentially
+        // with zoomLevel. The 256-in-flight decode cap in scheduleRender()
+        // bounds the extra work a high-fps source implies at full zoom.
+        let cap = Double(nominalFPS)
         let value = pow(2.0, zoomLevel * 0.6)
         return min(cap, max(0.5, value))
     }
