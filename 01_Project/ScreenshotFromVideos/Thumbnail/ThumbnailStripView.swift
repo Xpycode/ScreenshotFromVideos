@@ -27,6 +27,9 @@ struct ThumbnailStripView: View {
     // (vs the small per-tick deltas of natural playback). Read by the
     // ScrollViewReader-side onChange below to bring the active cell into view.
     @State private var seekScrollTarget: Int? = nil
+    // Columns visible per row, tracked from scroll geometry so ↑/↓ arrow
+    // navigation can step a whole row instead of a single cell.
+    @State private var cellsPerRow: Int = 1
 
     private var cellW: CGFloat { model.thumbWidth }
     private var cellH: CGFloat { cellW * 9.0 / 16.0 }
@@ -61,6 +64,7 @@ struct ThumbnailStripView: View {
                                     toleranceBefore: .zero,
                                     toleranceAfter: .zero
                                 )
+                                stripFocused = true
                             },
                             onCmdTap: { tappedTime in
                                 vm.captureFrame(at: tappedTime)
@@ -121,6 +125,39 @@ struct ThumbnailStripView: View {
                   !press.modifiers.contains(.control) else { return .ignored }
             vm.captureCurrentFrame()
             return .handled
+        }
+        .onKeyPress(keys: [.leftArrow]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            navigate(by: -1)
+            return .handled
+        }
+        .onKeyPress(keys: [.rightArrow]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            navigate(by: 1)
+            return .handled
+        }
+        .onKeyPress(keys: [.upArrow]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            navigate(by: -cellsPerRow)
+            return .handled
+        }
+        .onKeyPress(keys: [.downArrow]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            navigate(by: cellsPerRow)
+            return .handled
+        }
+        .onScrollGeometryChange(for: Int.self) { geom in
+            max(1, Int((geom.containerSize.width - 16) / (cellW + 1)))
+        } action: { _, new in
+            cellsPerRow = new
         }
         .onScrollGeometryChange(for: ClosedRange<Double>.self) { geom in
             let count = times.count
@@ -228,6 +265,20 @@ struct ThumbnailStripView: View {
         let halfInterval = 0.5 / model.density
         let t = CMTimeGetSeconds(time)
         return vm.manualTimes.contains { abs(CMTimeGetSeconds($0) - t) < halfInterval }
+    }
+
+    // Arrow-key navigation: step the active cell by `offset` (±1 for ←/→,
+    // ±cellsPerRow for ↑/↓), seek the player to that cell's time, and bring it
+    // into view. Anchors off the current active cell so it tracks player state.
+    private func navigate(by offset: Int) {
+        let allTimes = times
+        let count = allTimes.count
+        guard count > 0, offset != 0 else { return }
+        let cur = max(0, activeIndex)
+        let target = max(0, min(count - 1, cur + offset))
+        guard target != cur else { return }
+        player?.seek(to: allTimes[target], toleranceBefore: .zero, toleranceAfter: .zero)
+        seekScrollTarget = target
     }
 
     private var activeIndex: Int {
