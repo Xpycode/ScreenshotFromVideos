@@ -18,6 +18,7 @@ import Foundation
 import AVFoundation
 import CoreMedia
 import Observation
+import AppKit
 
 /// Top-level mode picker on the right pane.
 enum ExtractionTab: String, CaseIterable, Identifiable {
@@ -90,6 +91,9 @@ final class ExtractionViewModel {
     var statusMessage: String = ""
     var isRunning: Bool = false
     var lastError: String?
+    /// Files written by the most recent successful export. Drives the
+    /// "Show in Finder" affordance; cleared when a new job starts.
+    private(set) var lastExportedURLs: [URL] = []
 
     @ObservationIgnored
     private var job: Task<Void, Never>?
@@ -238,6 +242,7 @@ final class ExtractionViewModel {
 
         progress = nil
         lastError = nil
+        lastExportedURLs = []
         statusMessage = "Extracting…"
         isRunning = true
 
@@ -247,6 +252,7 @@ final class ExtractionViewModel {
                 let urls = try await ExtractionPipeline.run(request) { update in
                     self.progress = update
                 }
+                self.lastExportedURLs = urls
                 self.statusMessage = "Done — wrote \(urls.count) \(request.format.rawValue)\(urls.count == 1 ? "" : "s")"
             } catch is CancellationError {
                 self.statusMessage = "Cancelled — partial frames remain on disk"
@@ -261,6 +267,16 @@ final class ExtractionViewModel {
 
     func cancel() {
         job?.cancel()
+    }
+
+    /// Reveal the most recent export in Finder, selecting the written files.
+    /// Falls back to opening the output folder if the file list is empty.
+    func revealInFinder() {
+        if !lastExportedURLs.isEmpty {
+            NSWorkspace.shared.activateFileViewerSelecting(lastExportedURLs)
+        } else if let outputFolder {
+            NSWorkspace.shared.activateFileViewerSelecting([outputFolder])
+        }
     }
 
     // MARK: - Request builder

@@ -343,6 +343,15 @@ struct RightPaneView: View {
                     }
                     .buttonStyle(FCPButtonStyle())
                     .keyboardShortcut(.cancelAction)
+                } else if !vm.lastExportedURLs.isEmpty {
+                    Button {
+                        vm.revealInFinder()
+                    } label: {
+                        Label("Show in Finder", systemImage: "folder")
+                            .labelStyle(.titleAndIcon)
+                    }
+                    .buttonStyle(FCPButtonStyle())
+                    .help("Reveal the exported frames in Finder")
                 }
 
                 Spacer()
