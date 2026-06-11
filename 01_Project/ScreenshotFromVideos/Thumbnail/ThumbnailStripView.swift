@@ -19,6 +19,10 @@ struct ThumbnailStripView: View {
     let vm: ExtractionViewModel
 
     @State private var currentTime: CMTime = .zero
+    // Drives keyboard focus for the grid. The +/-/0/m/arrow handlers only fire
+    // while the strip holds focus, so we claim it on cell-tap and re-claim it
+    // after a zoom-button click (which would otherwise steal focus).
+    @FocusState private var stripFocused: Bool
     // Set by the periodic time observer when a "seek-sized" delta is detected
     // (vs the small per-tick deltas of natural playback). Read by the
     // ScrollViewReader-side onChange below to bring the active cell into view.
@@ -88,6 +92,7 @@ struct ThumbnailStripView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.secondaryBackground)
         .focusable()
+        .focused($stripFocused)
         .focusEffectDisabled()
         .onKeyPress(keys: [.init("="), .init("+")]) { press in
             guard !press.modifiers.contains(.command),
@@ -147,9 +152,17 @@ struct ThumbnailStripView: View {
 
     private var zoomControlRow: some View {
         HStack(spacing: 10) {
-            Image(systemName: "minus.magnifyingglass")
-                .font(.system(size: 11))
-                .foregroundStyle(Theme.secondaryText)
+            Button {
+                model.zoomOut()
+                stripFocused = true
+            } label: {
+                Image(systemName: "minus.magnifyingglass")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .foregroundStyle(Theme.secondaryText)
+            .help("Zoom out (−)")
 
             Slider(
                 value: Binding(
@@ -160,17 +173,27 @@ struct ThumbnailStripView: View {
             )
             .controlSize(.mini)
 
-            Image(systemName: "plus.magnifyingglass")
-                .font(.system(size: 11))
-                .foregroundStyle(Theme.secondaryText)
+            Button {
+                model.zoomIn()
+                stripFocused = true
+            } label: {
+                Image(systemName: "plus.magnifyingglass")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .foregroundStyle(Theme.secondaryText)
+            .help("Zoom in (+)")
 
             Button {
                 model.resetZoom()
+                stripFocused = true
             } label: {
                 Image(systemName: "arrow.counterclockwise")
                     .font(.system(size: 10))
             }
             .buttonStyle(.plain)
+            .focusable(false)
             .foregroundStyle(Theme.secondaryText)
             .help("Reset zoom (⌘0)")
         }
