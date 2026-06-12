@@ -24,7 +24,10 @@ struct ZoomCommands: Commands {
     @FocusedValue(\.stripZoom) private var zoom
 
     var body: some Commands {
-        CommandMenu("View") {
+        // Merge into the standard "View" menu rather than CommandMenu("View"),
+        // which would create a *second* View menu beside the system one.
+        CommandGroup(after: .sidebar) {
+            Divider()
             Button("Zoom In") { zoom?.zoomIn() }
                 .keyboardShortcut("=", modifiers: .command)
                 .disabled(zoom == nil)
