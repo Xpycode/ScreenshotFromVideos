@@ -137,7 +137,7 @@ struct RightPaneView: View {
             sectionLabel("Manual timestamps")
 
             if vm.manualTimes.isEmpty {
-                Text("Scrub the player and press ⌘C to capture frames.")
+                Text("Scrub the player and press Q to add frames to the queue.")
                     .font(.callout)
                     .foregroundStyle(Theme.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -240,11 +240,35 @@ struct RightPaneView: View {
                             .textFieldStyle(.roundedBorder)
                             .disabled(!vm.numbering.enabled)
                             .help(filenameTokensHelp)
+                        filenameTokenButtons
                     }
                 }
                 .padding(.top, 4)
             }
         }
+    }
+
+    /// Tap-to-insert chips so users don't have to remember token spelling.
+    /// Appends to the pattern (SwiftUI TextField doesn't expose the caret).
+    private var filenameTokenButtons: some View {
+        let tokens = ["{name}", "{counter}", "{index}", "{timecode}",
+                      "{frame}", "{seconds}", "{date}", "{time}"]
+        return VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(stride(from: 0, to: tokens.count, by: 4)), id: \.self) { start in
+                HStack(spacing: 6) {
+                    ForEach(tokens[start..<min(start + 4, tokens.count)], id: \.self) { token in
+                        Button(token) {
+                            vm.numbering.templater.pattern += token
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .font(.caption.monospaced())
+                    }
+                }
+            }
+        }
+        .disabled(!vm.numbering.enabled)
+        .padding(.top, 2)
     }
 
     private var filenameTokensHelp: String {
@@ -253,6 +277,9 @@ struct RightPaneView: View {
         {name} — source video filename
         {counter} — zero-padded counter (0001, 0002…)
         {index} — un-padded 1-based index
+        {timecode} — source frame timecode (00-01-23-15)
+        {frame} — absolute source frame number
+        {seconds} — source timestamp (00-01-23-456)
         {date} — YYYY-MM-DD at export time
         {time} — HH-MM-SS at export time
         """
