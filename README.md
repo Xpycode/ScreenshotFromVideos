@@ -34,6 +34,7 @@ Claude Code (and most LLMs) can't read video. When you want to show what's happe
 - **Frame-count preview** — the footer tells you exactly how many frames will be written before you commit
 - **Drag & drop or file picker** — drop a video on the window or browse for it
 - **Show in Finder** — jump straight to the exported folder
+- **Auto-Update** — check for new versions from the app menu (Sparkle)
 
 ## Installation
 

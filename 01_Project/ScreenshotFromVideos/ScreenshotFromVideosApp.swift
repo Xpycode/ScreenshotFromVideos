@@ -16,6 +16,10 @@ struct ScreenshotFromVideosApp: App {
     // the same instance. Single-window app — no multi-window concerns.
     @State private var vm = ExtractionViewModel()
 
+    // Sparkle updater. Plain `let` (matches the sibling apps) — canCheckForUpdates
+    // flips true almost immediately at launch, so the menu item self-enables.
+    private let updateController = UpdateController()
+
     var body: some Scene {
         WindowGroup {
             ContentView(vm: vm)
@@ -25,6 +29,15 @@ struct ScreenshotFromVideosApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: 980, height: 620)
         .commands {
+            // "Check for Updates…" in the app menu, just under About — matches
+            // the sibling published apps. Disabled until Sparkle is ready.
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") {
+                    updateController.checkForUpdates()
+                }
+                .disabled(!updateController.canCheckForUpdates)
+            }
+
             // Replace the default (non-functional) "New" item with Open
             // Video. Output-folder picking is exposed via the right-pane
             // button only — adding a menu item for it would be redundant

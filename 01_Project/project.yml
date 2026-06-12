@@ -23,6 +23,9 @@ packages:
   SDWebImageWebPCoder:
     url: https://github.com/SDWebImage/SDWebImageWebPCoder.git
     from: 0.15.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.8.0"
 
 targets:
   ScreenshotFromVideos:
@@ -33,6 +36,8 @@ targets:
     dependencies:
       - package: SDWebImageWebPCoder
         product: SDWebImageWebPCoder
+      - package: Sparkle
+        product: Sparkle
     info:
       path: ScreenshotFromVideos/Info.plist
       properties:
@@ -47,6 +52,14 @@ targets:
         NSHighResolutionCapable: true
         NSMainStoryboardFile: ""
         NSPrincipalClass: NSApplication
+        # Sparkle auto-update. SUPublicEDKey is the public half of the shared
+        # Xpycode EdDSA key (same one CropBatch et al. use) — the private key
+        # in Keychain signs each release's DMG via `sign_update`. The appcast
+        # is served from the repo root on `main`. SUEnableAutomaticChecks lets
+        # Sparkle prompt once on first launch, then check ~daily in background.
+        SUEnableAutomaticChecks: true
+        SUFeedURL: https://raw.githubusercontent.com/Xpycode/ScreenshotFromVideos/main/appcast.xml
+        SUPublicEDKey: o388Mk7QoQjHQ7PBDGrTQ13HkqvO1nyzkfcnmfVumUQ=
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lucesumbrarum.ScreenshotFromVideos
