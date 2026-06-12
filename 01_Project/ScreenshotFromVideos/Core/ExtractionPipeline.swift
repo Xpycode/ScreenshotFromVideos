@@ -78,7 +78,9 @@ enum ExtractionPipeline {
                     if request.numbering.enabled {
                         basename = request.numbering.templater.filename(
                             originalName: originalName,
-                            index: written.count
+                            index: written.count,
+                            time: requested,
+                            fps: metadata.nominalFrameRate
                         )
                     } else {
                         basename = TimestampFormatter.string(from: requested)
