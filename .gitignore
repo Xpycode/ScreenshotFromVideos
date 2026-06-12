@@ -16,6 +16,10 @@ xcuserdata/
 # Claude Code (user-specific)
 .claude/settings.local.json
 
+# Tool caches (Serena, fastembed) — local indexes, not source
+.serena/
+.fastembed_cache/
+
 # Build artifacts
 04_Exports/*.app
 04_Exports/*.dmg
