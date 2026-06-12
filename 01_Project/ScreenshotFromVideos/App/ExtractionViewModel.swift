@@ -230,6 +230,29 @@ final class ExtractionViewModel {
         manualTimes.remove(at: index)
     }
 
+    // MARK: - Clipboard
+
+    /// Renders the current playhead frame at full resolution and puts it on the
+    /// general pasteboard (⌘C). The Task inherits this @MainActor context and
+    /// the generator decodes off-thread internally, so no Sendable boundary is
+    /// crossed in our code. Tolerance is .zero so the copied pixels match the
+    /// frame the playhead is on — same contract as the export path.
+    func copyCurrentFrameToClipboard() {
+        guard let player, let url = sourceURL else { return }
+        let time = player.currentTime()
+        Task {
+            let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+            generator.appliesPreferredTrackTransform = true
+            generator.requestedTimeToleranceBefore = .zero
+            generator.requestedTimeToleranceAfter = .zero
+            guard let result = try? await generator.image(at: time) else { return }
+            let image = NSImage(cgImage: result.image, size: .zero)
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.writeObjects([image])
+        }
+    }
+
     // MARK: - Extraction lifecycle
 
     func startExtraction() {

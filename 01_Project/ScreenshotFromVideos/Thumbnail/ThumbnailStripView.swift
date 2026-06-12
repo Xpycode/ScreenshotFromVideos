@@ -207,7 +207,7 @@ struct ThumbnailStripView: View {
             model.resetZoom()
             return .handled
         }
-        .onKeyPress(keys: [.init("m"), .init("M")]) { press in
+        .onKeyPress(keys: [.init("m"), .init("M"), .init("q"), .init("Q")]) { press in
             guard !press.modifiers.contains(.command),
                   !press.modifiers.contains(.option),
                   !press.modifiers.contains(.control) else { return .ignored }
