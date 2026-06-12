@@ -38,7 +38,7 @@ Claude Code (and most LLMs) can't read video. When you want to show what's happe
 
 ## Installation
 
-1. Download `StillsFromVideo.dmg` from [Releases](https://github.com/Xpycode/ScreenshotFromVideos/releases/latest)
+1. Download `StillsFromVideo-0.1.dmg` from [Releases](https://github.com/Xpycode/ScreenshotFromVideos/releases/latest)
 2. Open the DMG and drag **Stills From Video** to Applications
 3. Launch from the Applications folder
 

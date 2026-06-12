@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Stills From Video Updates</title>
+        <link>https://github.com/Xpycode/ScreenshotFromVideos</link>
+        <description>Most recent changes with links to updates.</description>
+        <language>en</language>
+
+        <!-- Add new releases here, NEWEST FIRST.
+             scripts/release.sh prints a ready-to-paste <item> for you.
+
+             Reminder: sparkle:version is the CFBundleVersion (build number),
+             NOT the marketing string. It must match the shipped app and must
+             increase every release, or Sparkle won't offer the update.
+
+        <item>
+            <title>Version 0.1</title>
+            <pubDate>Thu, 12 Jun 2026 12:00:00 +0200</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Xpycode/ScreenshotFromVideos/releases/download/v0.1/StillsFromVideo-0.1.dmg"
+                sparkle:edSignature="PASTE_FROM_sign_update"
+                length="PASTE_FROM_sign_update"
+                type="application/octet-stream"
+            />
+        </item>
+        -->
+
+    </channel>
+</rss>

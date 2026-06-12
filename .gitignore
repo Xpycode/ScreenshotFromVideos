@@ -25,6 +25,9 @@ xcuserdata/
 04_Exports/*.dmg
 04_Exports/*.zip
 
+# Release output (DMGs go to GitHub Releases, not git)
+releases/
+
 # Smoke-test export artifacts (PNG/JPG/HEIC frames written by the app itself)
 04_Exports/*.png
 04_Exports/*.jpg
