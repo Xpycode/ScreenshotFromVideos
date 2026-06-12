@@ -238,7 +238,8 @@ Three small items shipped on branch `polish/post-phase-5` on 2026-05-28. Plannin
 
 ### WebP omitted from SFV's format list — load-bearing
 **Date:** 2026-05-28 (planning) — confirmed in execution
-**Decision:** SFV ships PNG / JPG / HEIC. No WebP. Not now, possibly never.
+**⚠️ SUPERSEDED 2026-05-29 — WebP now ships via SDWebImageWebPCoder. See §7.** The reasoning below is retained because it is still true and load-bearing: ImageIO *still* cannot write WebP on macOS, so the only path is the third-party encoder this entry's "Consequences" anticipated. What changed is the conclusion — the user's paid Apple Developer account made the notarization cost acceptable, so the "documented but not planned" encoder was actually built. Re-run the runtime probe before assuming Apple ever fixed ImageIO itself.
+**Decision (original):** SFV ships PNG / JPG / HEIC. No WebP. Not now, possibly never.
 **Why:** ImageIO has no WebP write support on macOS through 26.5. Triangulated from four sources during planning:
 1. **Apple docs.** The WebP documentation collection (`developer.apple.com/documentation/imageio/webp-data`) exposes only *read* metadata keys (`kCGImagePropertyWebP*`). No write key.
 2. **Runtime probe on this Mac.** `swift /tmp/probe.swift` calling `CGImageDestinationCopyTypeIdentifiers()` returned 22 writable types. `org.webmproject.webp` was NOT among them. `public.heic`, `public.jpeg`, `public.png`, `public.tiff` were all present. Definitive for the version actually running here.
@@ -285,3 +286,53 @@ Three small items shipped on branch `polish/post-phase-5` on 2026-05-28. Plannin
 **Date:** 2026-05-28
 **Decision:** `ExtractionViewModel.currentMode: ExtractionMode?` is the single resolver for "do the UI fields currently describe a valid mode?". Both `previewFrameCount` and `buildRequest()` read from it.
 **Why:** Item 1 added the count preview, which needed the same `tab / intervalUnit / intervalSeconds / intervalFrames / manualTimes` → `ExtractionMode` resolution that `buildRequest()` was already doing inline. Factoring out the resolver collapsed `buildRequest()` from ~20 lines to 9 and made the two paths impossible to drift. Returns `nil` for incomplete selections (zero interval, empty manual list) — both callers handle nil the same way (no count / no request).
+
+---
+
+## 7. WebP Export — Shipped via SDWebImageWebPCoder
+
+WebP support, planned and executed across 2026-05-29 (Waves A–D) on branch `polish/webp-support`, now merged to `main`. This section **supersedes the "WebP omitted" decision in §6** — the omission's evidence (ImageIO can't write WebP) still holds; what changed is that a third-party encoder was adopted to route around it. See `sessions/2026-05-29.md` for the execution log and `sessions/_archive/2026-05-29_POLISH_PLAN_webp_support.md` for the original plan.
+
+### Encoder pick: SDWebImageWebPCoder 0.15.0 via SPM (Option A over Option B)
+**Date:** 2026-05-29 (planning)
+**Decision:** Vendor [SDWebImageWebPCoder](https://github.com/SDWebImage/SDWebImageWebPCoder) 0.15.0 through SwiftPM, pulling the full SDWebImage core (Option A), rather than writing a bespoke libwebp Xcode wrapper (~50 LOC of owned C-interop, Option B).
+**Why:** Option A is upstream-maintained and gives the ICC-embed feature for free. The trade-off is ~2 MB binary growth (SDWebImage core + libwebp 1.5.0) and a heavier dependency graph. All sources build from source — no xcframework, no `dlopen` — so notarization and hardened-runtime stay clean. The paid Apple Developer account (acquired before this work) made the notarization cost a non-issue.
+**Resolved versions:** SDWebImageWebPCoder 0.15.0 + SDWebImage 5.21.7 + libwebp 1.5.0.
+**Future-shrink path:** if the 2 MB matters, Option B (libwebp-only, bespoke wrapper) is documented in the plan.
+
+### `@preconcurrency import` on both SDWebImage modules
+**Date:** 2026-05-29 (Wave A)
+**Decision:** Both `import SDWebImage` and `import SDWebImageWebPCoder` in `Services/WebPEncoder.swift` carry `@preconcurrency`.
+**Why:** Neither module's headers are Sendable-audited. Under this project's `SWIFT_STRICT_CONCURRENCY=complete`, the un-audited types light up as concurrency warnings without `@preconcurrency`. The pair suppresses the noise; verified warning-free on SFV's own code at every wave. (SourceKit will still show a transient "No such module 'SDWebImage'" until `xcodegen generate` regenerates the pbxproj — expected, SPM products aren't visible to SourceKit before regen.)
+
+### Hardcode `SDImageCoderOption.encodeWebPMethod = 6` on every encode
+**Date:** 2026-05-29 (planning, landed Wave B)
+**Decision:** Every WebP encode passes `method=6` in the options dict.
+**Why:** SDWebImageWebPCoder issue #116 — the default `method=4` produces visibly lower output than the `cwebp` CLI at the same quality. `method=6` closes the gap. CPU cost is 2–3× per encode, acceptable for batch export.
+**⚠️ Constant-rename gotcha (execution finding):** SDWebImageWebPCoder 0.15.0 **renamed** the option constants the plan was written against. Use member-shorthand `SDImageCoderOption.encodeWebPMethod` / `.encodeWebPLossless` — NOT the old top-level `SDImageCoderEncodeWebPMethod` / `SDImageCoderEncodeWebPLossless`. The dict is `[SDImageCoderOption: Any]`, so shorthand resolves cleanly. The old names fail to compile.
+
+### Convert CGImage to sRGB via transient `CGContext` before the encoder handoff
+**Date:** 2026-05-29 (planning, landed Wave B)
+**Decision:** `WebPEncoder.encode` draws the incoming CGImage into a transient sRGB `CGContext` (`premultipliedLast | order32Big`) → `makeImage()` → `NSImage(cgImage:size:.zero)` before handing to `SDImageWebPCoder.shared.encodedData`.
+**Why:** `AVAssetImageGenerator` returns CGImages tagged with the *video* color space — Rec.709 for SDR, BT.2020 for HDR. libwebp writes pixels as-is; a color-unmanaged viewer would see a shift. Converting to sRGB first means SDWebImageWebPCoder 0.15.0 embeds the correct sRGB ICC profile.
+
+### One quality slider, two backing values: `exportQuality` (lossy) and `exportEffort` (lossless)
+**Date:** 2026-05-29 (Wave C + effort-split fix `207b2a6`)
+**Decision:** The single Quality slider in `RightPaneView.formatSection` binds — via ternary on `(format == .webp && lossless)` — to one of two persisted values: `exportQuality` (shared by JPG / HEIC / WebP-lossy, default per §6) or `exportEffort` (WebP-lossless only, default 0.75). The label flips "Quality" → "Effort" when WebP + Lossless is active. `buildRequest` feeds effort only in WebP-lossless mode. The Lossless toggle appears only when `format.hasLosslessOption`.
+**Why:** libwebp reuses its `quality` parameter as an *encode-effort* knob in lossless mode (higher = smaller/slower, same pixels), so one control can serve both roles. But the two axes must not share a backing value — a Wave C smoke caught JPG's 33% quality leaking into WebP-lossless "effort" when they shared `exportQuality`. Splitting the storage keeps them independent; the slider being one widget with two semantic roles is fine because they're never both active. Label flip (chosen over always-"Quality"-plus-tooltip via AskUserQuestion) is the more honest signal of what the slider does.
+
+### Our WebP "lossless" is near-lossless (≤5/255), not bit-exact
+**Date:** 2026-05-29 (Wave D smoke; tooltip fixed `cf7a98b`)
+**Decision:** Accept the encoder as-is and label WebP-lossless output "visually identical (within ~2%), ~55% smaller" — NOT "bit-exact pixels". A true-bit-exact path was offered and declined.
+**Why:** Wave D smoke on a 4K HEVC Rec.709 clip showed WebP-lossless differs from the source PNG by maxAbs **5/255** (mean 0.34) — confirmed via libwebp's reference `dwebp` decoder, so it is NOT a decode artifact. The two effort levels are bit-exact to *each other* (dwebp e50 vs e100 maxAbs=0), which localizes the ≤5 shift to the `CGImage → NSImage → SDWebImage` encode hand-off, before libwebp ever runs. The shift is sub-perceptual (~2%) and the file is still ~57% smaller than PNG. True bit-exact would require feeding sRGB RGBA straight to libwebp, bypassing NSImage — not worth the bespoke path for an imperceptible gain. Plan criterion #4 ("bit-exact lossless-vs-PNG byte compare") therefore does NOT hold; this is the honest correction of record.
+**Lossy results (same smoke):** q0.5 → 96 KB (mean err 0.99), q1.0 → 663 KB (err 0.47, better as expected); all outputs valid `RIFF … WebP`; no color cast in side-by-side.
+
+### Shipped on a fresh `polish/webp-support` branch
+**Date:** 2026-05-29
+**Decision:** WebP shipped on a branch cut fresh from `main`, NOT stacked on `polish/post-phase-5`.
+**Why:** Cleanly separable for review/revert — the two polish efforts are independent. (Both have since fast-forwarded to `main`.)
+
+### Bonus fix carried in Wave B: format-correct export-complete message
+**Date:** 2026-05-29 (Wave B)
+**Decision:** `ExtractionViewModel.startExtraction` line 239: `"wrote N PNG"` → uses `request.format.rawValue`.
+**Why:** Pre-existing bug surfaced during recon — the message hardcoded "PNG" regardless of format, silently wrong for JPG/HEIC since the multi-format ship (2026-05-28, §6). Fixed opportunistically since the request shape was already being touched.
