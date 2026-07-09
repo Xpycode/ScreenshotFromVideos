@@ -33,6 +33,11 @@ struct ThumbnailStripView: View {
     // Reflects player.timeControlStatus so the transport bar's play/pause icon
     // stays correct even when playback stops on its own (reaches end).
     @State private var isPlaying: Bool = false
+    // Debounces the seek-driven auto-scroll so a scrub storm (many >0.5s jumps
+    // in a row) resolves to a single scrollTo once the playhead settles,
+    // instead of stacking interrupted animations + render churn. See
+    // observePlayerTime().
+    @State private var seekScrollWork: Task<Void, Never>? = nil
 
     private var cellW: CGFloat { model.thumbWidth }
     private var cellH: CGFloat { cellW * 9.0 / 16.0 }
@@ -61,7 +66,7 @@ struct ThumbnailStripView: View {
             .buttonStyle(.plain)
             .focusable(false)
             .foregroundStyle(Theme.primaryText)
-            .help(isPlaying ? "Pause" : "Play")
+            .help("Play/Pause (Space) · J/K/L shuttle · ⌥←→ jump 30s · ⇧←→ jump 1min")
 
             // Selected frame: frame-accurate timecode + absolute frame index.
             // The frame number rides in a worst-case-width field (hidden
@@ -128,6 +133,52 @@ struct ThumbnailStripView: View {
         } else {
             player.play()
         }
+        stripFocused = true
+    }
+
+    // MARK: - Transport: J/K/L shuttle + jump
+
+    // Forward speed ladder for the shuttle. J mirrors it in reverse.
+    private static let shuttleLadder: [Float] = [1, 2, 4]
+
+    /// L / J — NLE-style shuttle. First press starts 1× in that direction; each
+    /// further press steps up the ladder (2×, 4×). Reverse depends on the codec,
+    /// so if the item can't play (fast-)reverse we beep and hold the current
+    /// rate rather than stall the player silently at rate 0.
+    private func shuttle(forward: Bool) {
+        guard let player else { return }
+        let r = player.rate
+        let next: Float
+        if forward {
+            next = r <= 0 ? 1 : (Self.shuttleLadder.first { $0 > r } ?? Self.shuttleLadder.last!)
+        } else if r >= 0 {
+            next = -1
+        } else {
+            let mag = -r
+            next = -(Self.shuttleLadder.first { $0 > mag } ?? Self.shuttleLadder.last!)
+        }
+        let item = player.currentItem
+        if next > 1, item?.canPlayFastForward != true { NSSound.beep(); return }
+        if next < 0 {
+            let ok = next < -1 ? (item?.canPlayFastReverse == true) : (item?.canPlayReverse == true)
+            if !ok { NSSound.beep(); return }
+        }
+        player.rate = next
+        stripFocused = true
+    }
+
+    /// ⌥←/→ (±30 s) and ⇧←/→ (±1 min) — seek relative to the current playhead,
+    /// clamped to the clip. The seek detector in observePlayerTime() then
+    /// recenters the strip on the landing spot (debounced).
+    private func jump(by seconds: Double) {
+        guard let player else { return }
+        let cur = CMTimeGetSeconds(player.currentTime())
+        let target = max(0, min(model.duration, cur + seconds))
+        player.seek(
+            to: CMTime(seconds: target, preferredTimescale: 600),
+            toleranceBefore: .zero,
+            toleranceAfter: .zero
+        )
         stripFocused = true
     }
 
@@ -215,16 +266,16 @@ struct ThumbnailStripView: View {
             return .handled
         }
         .onKeyPress(keys: [.leftArrow]) { press in
-            guard !press.modifiers.contains(.command),
-                  !press.modifiers.contains(.option),
-                  !press.modifiers.contains(.control) else { return .ignored }
+            if press.modifiers.contains(.command) || press.modifiers.contains(.control) { return .ignored }
+            if press.modifiers.contains(.option) { jump(by: -30); return .handled }   // ⌥← : −30 s
+            if press.modifiers.contains(.shift)  { jump(by: -60); return .handled }   // ⇧← : −1 min
             navigate(by: -1)
             return .handled
         }
         .onKeyPress(keys: [.rightArrow]) { press in
-            guard !press.modifiers.contains(.command),
-                  !press.modifiers.contains(.option),
-                  !press.modifiers.contains(.control) else { return .ignored }
+            if press.modifiers.contains(.command) || press.modifiers.contains(.control) { return .ignored }
+            if press.modifiers.contains(.option) { jump(by: 30); return .handled }    // ⌥→ : +30 s
+            if press.modifiers.contains(.shift)  { jump(by: 60); return .handled }    // ⇧→ : +1 min
             navigate(by: 1)
             return .handled
         }
@@ -240,6 +291,38 @@ struct ThumbnailStripView: View {
                   !press.modifiers.contains(.option),
                   !press.modifiers.contains(.control) else { return .ignored }
             navigate(by: cellsPerRow)
+            return .handled
+        }
+        // J/K/L shuttle transport + Space toggle. Same modifier guard as the
+        // zoom/capture keys so they only fire on the bare key while the strip
+        // holds focus (letters allow Shift for their capitalized variants).
+        .onKeyPress(keys: [.init("l"), .init("L")]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            shuttle(forward: true)
+            return .handled
+        }
+        .onKeyPress(keys: [.init("j"), .init("J")]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            shuttle(forward: false)
+            return .handled
+        }
+        .onKeyPress(keys: [.init("k"), .init("K")]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            player?.pause()
+            stripFocused = true
+            return .handled
+        }
+        .onKeyPress(keys: [.space]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control) else { return .ignored }
+            togglePlayPause()
             return .handled
         }
         .onScrollGeometryChange(for: Int.self) { geom in
@@ -397,10 +480,19 @@ struct ThumbnailStripView: View {
                 let prevSec = CMTimeGetSeconds(currentTime)
                 currentTime = time
                 // A seek shows up as a >0.5 s jump (natural per-tick deltas are
-                // ≤1/30 s at this observer interval). Bring the active cell
-                // into view so player-side seeking and the strip stay synced.
+                // ≤1/30 s at this observer interval). Bring the active cell into
+                // view so player-side seeking and the strip stay synced — but
+                // *debounced*: dragging the scrubber emits a storm of such jumps,
+                // and animating a scrollTo on every one makes the grid flail and
+                // thrashes the render queue. Reschedule on each jump; the scroll
+                // fires ~150 ms after the last one, i.e. once the drag settles.
                 if abs(CMTimeGetSeconds(time) - prevSec) > 0.5 {
-                    seekScrollTarget = activeIndex
+                    seekScrollWork?.cancel()
+                    seekScrollWork = Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(150))
+                        if Task.isCancelled { return }
+                        seekScrollTarget = activeIndex
+                    }
                 }
             }
         }
