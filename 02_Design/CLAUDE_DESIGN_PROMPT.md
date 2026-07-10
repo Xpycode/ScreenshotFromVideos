@@ -1,5 +1,12 @@
 # Claude Design — prompt for Stills From Video app icon
 
+> **SUPERSEDED (2026-07-10)** by the full handoff package at
+> `02_Design/ICON_HANDOFF/` — use `ICON_HANDOFF/HANDOFF.md` (self-contained
+> brief + reference images + deliverables spec) and `ICON_HANDOFF/INTEGRATION.md`
+> (wiring the returned assets into the app). This file is kept for history;
+> the prompt below lacks the icon-grid spec (824/1024 plate) and the layered
+> deliverable needed for the macOS 26 Icon Composer path.
+
 Paste the block below into Claude Design (or any AI image tool that outputs 1024×1024 PNGs) when you want to replace the placeholder icon.
 
 ---
