@@ -14,6 +14,7 @@ canonical AVPlayer seek-coalescing pattern — no visual or behavioral changes.
 - [ ] During playback/shuttle, the grid's cells no longer re-evaluate on every 1/30 s time tick (verify: Instruments SwiftUI template or CPU sampling — see Wave 0 baseline vs Wave 4 re-measure)
 - [ ] A 256-thumbnail batch fill causes ≤ ~10 grid invalidations, not 256
 - [ ] Held arrow-key navigation never stacks seeks (at most one in flight; latest target wins)
+- [ ] **NEW (found in Wave 0):** the strip auto-scrolls to keep the active cell visible during ordinary continuous playback, not just on seeks — the border must never walk off-screen while playing
 - [ ] All existing behavior unchanged: border tracks playhead (no off-by-one), timecode ticks, seek auto-scroll centers, ⌘-click captures, M/Q capture, J/K/L shuttle, zoom paths, pinned dots
 - [ ] Clean build, zero SFV-code warnings under `SWIFT_STRICT_CONCURRENCY=complete`
 
@@ -96,7 +97,7 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
 ## Tasks
 
 ### Wave 0 — Baseline (no code; do FIRST, results go in Execution Log)
-- [ ] **0.1**: Measure baseline CPU → record numbers in this file
+- [x] **0.1**: Measure baseline CPU → record numbers in this file
   - Build + launch current `main` (this Mac: ad-hoc sign, `CODE_SIGN_IDENTITY="-"`), load a long
     test clip (the 4K X-H2S MOV from Wave D works), then sample
     `ps -p <PID> -o %cpu` at 1 Hz for ~30 s in each state: (a) playback 1× default zoom,
@@ -133,9 +134,17 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
 - [ ] **2.1**: Rework time observation → `Thumbnail/ThumbnailStripView.swift:475-505` (decision 1)
   - Delete `@State currentTime`; observer keeps prev-time in a local var; write `@State activeIndex`
     only on change; keep the >0.5 s seek-detection + 150 ms debounce exactly as-is
+  - **Bundled bug fix (found in Wave 0 baseline sampling):** ordinary continuous playback never
+    auto-scrolls — only the >0.5 s seek-detection branch drives `scrollTo`, so the active cell walks
+    off-screen during plain playback at any zoom (border "vanishes"). While rewiring `activeIndex`
+    writes, also trigger a (coalesced/debounced — do not re-introduce a per-tick storm) `scrollTo`
+    whenever the new `activeIndex` falls outside the currently visible row range, so continuous
+    playback keeps the active cell in view without needing a >0.5 s jump
   - Success: paused + idle → zero body evaluations; playback at default zoom → grid body evals ≈
-    density/s (~1.5), not 30/s
-  - Backpressure: clean build; border still tracks playhead during playback and after seeks
+    density/s (~1.5), not 30/s; **active-cell border stays visible throughout 30s+ of continuous
+    playback at every zoom level (default and max), auto-scrolling as needed**
+  - Backpressure: clean build; border still tracks playhead during playback and after seeks; visible
+    at max zoom too (regression check for the Wave 0 finding)
 - [ ] **2.2**: Extract transport bar into a leaf view (same file) with its own periodic observer +
   local `currentTime`/`isPlaying`; parent passes `model`, `player`, play/pause closure, and the
   `FocusState` binding for focus re-claim
@@ -172,9 +181,13 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
 - [ ] **4.1**: Full manual smoke matrix (single session, one pass): playback, 4× shuttle fwd/rev,
   held arrows all four directions, ⌥/⇧ jumps, click-seek, ⌘-click capture, M/Q capture, all four
   zoom paths (pinch / keys / ⌘-wheel / slider), seek auto-scroll centering, transport readouts,
-  pinned dots, Unload + reload
+  pinned dots, Unload + reload, **continuous-playback auto-follow at default AND max zoom for 30s+
+  (Wave 0 bug fix — border must never scroll off-screen)**
 - [ ] **4.2**: Re-run the Wave 0 CPU sampling, same clip + states; record before/after in the
-  Execution Log. Expect (a)/(b) to drop the most.
+  Execution Log. Expect (a) to drop the most. **State (b) is expected to go UP, not down** — once
+  auto-follow is fixed (Wave 2.1), max-zoom playback will actually keep decoding new cells
+  continuously instead of stalling on a static off-screen view, so (b) becomes a true measurement
+  for the first time; compare it against (a)/(c), not against Wave 0's artifact-depressed 68.1%.
 - [ ] **4.3** *(optional)*: Instruments SwiftUI template — confirm body-eval counts collapsed
 - [ ] **4.4**: Update `docs/decisions.md` (§ new: strip-performance pass — the @State-ownership
   pattern, equatable-with-cacheVersion trap, generator batch-ID guard) + PROJECT_STATE + session log
@@ -185,6 +198,27 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
 <!-- Add during execution -->
 - (2026-07-10, from planning) `@State` invalidation is declaration-scoped, not read-scoped — moving
   a hot value out of a big view's `@State` is worth more than optimizing reads of it.
+- (2026-07-10, Wave 0) **Live-driven measurement, not automation.** Attempted to drive Wave 0 via
+  `osascript`/System Events keystrokes; the user was concurrently interacting with the app by hand
+  (playhead moved between two screenshots with no automation in between), so keystroke automation
+  and live human input would have collided. Switched to: user performs each state on cue, I sample
+  `ps -p <PID> -o %cpu=` at 1 Hz in the background. Works fine for this kind of measurement — no
+  code/tooling needed beyond `ps`.
+- (2026-07-10, Wave 0) **Found during (b) sampling, root-caused — real bug, not measurement noise:
+  the thumbnail strip never auto-scrolls to follow ordinary continuous playback, at any zoom level.**
+  `observePlayerTime()` (`ThumbnailStripView.swift:475-505`) only sets `seekScrollTarget` (which
+  drives `proxy.scrollTo`) when a tick-to-tick delta exceeds 0.5 s — the seek-detection heuristic.
+  Regular playback advances ~1/30 s per tick (more at shuttle speed, still well under 0.5 s in
+  practice), so that branch never fires during plain playback. The active-cell border *does* keep
+  tracking `activeIndex` correctly every tick — it just walks off-screen once playback carries it
+  past the visible viewport, which reads as "the highlight vanishes." Confirmed zoom-independent
+  (user report). This also explains the (a)/(b) CPU gap below: at max zoom the viewport covers far
+  fewer seconds, so the active cell exits the viewport almost immediately, leaving most of state
+  (b)'s 30 s window sampling a static view (no new prefetch/decode) — so (b)'s 68.1% is not a true
+  max-zoom-playback number, more like a "playback that's already scrolled out of view" number.
+  **Decision (2026-07-10, user): fold the fix into Wave 2.1**, which already rewrites this exact
+  observer/activeIndex-wiring (decision 1) — patching it now would just get overwritten. See Wave 2.1
+  and the new Acceptance Criterion below.
 
 ## Blocked Tasks
 (none)
@@ -195,7 +229,7 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
 
 | Wave | Started | Completed | Commits |
 |------|---------|-----------|---------|
-| 0 | | | baseline: (a)__% (b)__% (c)__% (d)__% (e)__% |
+| 0 | 2026-07-10 | 2026-07-10 | baseline (user-driven live, `ps` @ 1Hz on this Mac; clip: `~/Movies/PenumbraSmoke/mp4-long-perf.mp4`, 1280×720 H.264, 30 min): (a) playback/default-zoom avg **91.8%** (range 28–105, n=30s) · (b) playback/max-zoom avg **68.1%** (range 65–72, n=30s) — **unreliable, see Operational Learnings scroll-bug note** · (c) JKL-shuttle-4×/default-zoom avg **104.7%** (range 103.6–105.8, n=30s) · (d) held-arrow-repeat avg **72.3%** (range 68.5–80, n=10s) · (e) zoom-1→12-transition: pre-drag idle avg 14.6% (n=10s) → during-fill avg **120.9%**, peak **188.1%** (n=20s) |
 | 1 | | | |
 | 2 | | | |
 | 3 | | | |
