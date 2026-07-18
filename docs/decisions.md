@@ -336,3 +336,21 @@ WebP support, planned and executed across 2026-05-29 (Waves A–D) on branch `po
 **Date:** 2026-05-29 (Wave B)
 **Decision:** `ExtractionViewModel.startExtraction` line 239: `"wrote N PNG"` → uses `request.format.rawValue`.
 **Why:** Pre-existing bug surfaced during recon — the message hardcoded "PNG" regardless of format, silently wrong for JPG/HEIC since the multi-format ship (2026-05-28, §6). Fixed opportunistically since the request shape was already being touched.
+
+---
+
+## Condensed Log (migrated from PROJECT_STATE.md, 2026-07-18)
+
+These three entries lived only in PROJECT_STATE.md's "Key Decisions" list and were never promoted into the sections above. Preserved verbatim during the lean-digest migration so no rationale is lost. They keep their original one-line summary form (no fabricated Context/Options/Rationale fields).
+
+### Extraction mode: segmented picker
+**Origin:** Phase 2 (Wave 2)
+**Decision:** Extraction mode is a segmented picker — Interval (seconds / frames) OR Manual timestamps. (Relates to §4 "Discrete UI fields are the source of truth", which describes the backing fields the picker drives.)
+
+### Icon strategy: placeholder generator + Claude Design prompt
+**Origin:** Phase 4.5
+**Decision:** Icon strategy lives in `02_Design/`: a reproducible placeholder (`swift 02_Design/generate_app_icon.swift`) with the polished version one prompt away. Placeholder visual: dark navy gradient + filmstrip (sprocket holes punched via even-odd fill) + a detached warm-amber frame above-right (the extraction gesture).
+
+### Manual-pin half-interval window in seconds, not CMTime
+**Origin:** Phase 5 Wave 4.2
+**Decision:** Cell pin renders when `abs(CMTimeGetSeconds($0) - cellTimeSec) < 0.5 / model.density`. CMTime arithmetic via `CMTimeSubtract` + `CMTimeAbsoluteValue` would work, but Double seconds is cleaner since we already work in seconds in `activeIndex`, `thumbnailTimes`, etc. Resolved at the strip level — the cell stays vm-unaware (takes a `manualPinned: Bool`, not the model).
