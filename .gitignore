@@ -33,3 +33,6 @@ releases/
 04_Exports/*.jpg
 04_Exports/*.jpeg
 04_Exports/*.heic
+
+# Design-handoff bundles (icon/asset zips are working files, not source)
+02_Design/*.zip
