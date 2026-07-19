@@ -56,7 +56,8 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
    makes `times[i] == i/density` exact (so `activeIndex = round(seconds × density)` is exact),
    and makes `thumbnailCount` closed-form. Side effect: cache keys (timeMillis) shift slightly
    vs the drifted values → session cache re-fills once. Acceptable; cache is per-session.
-3. **Generator reuse has a cancellation race the current code accidentally avoids.** Today each
+3. **[SUPERSEDED 2026-07-19 — the batch-ID guard does not work. See Operational Learnings; task 1.4
+   was reverted. Kept for context.]** **Generator reuse has a cancellation race the current code accidentally avoids.** Today each
    batch owns a private generator, so a *stale* stream's `onTermination → cancelAllCGImageGeneration()`
    can only kill its own batch. With one shared generator, a late-firing termination from batch N
    would cancel batch N+1's decodes. **Guard required:** renderer keeps a monotonically increasing
@@ -106,29 +107,25 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
   - Success: five numbers written into Execution Log below
   - Backpressure: none (measurement)
 
-### Wave 1 — Model + renderer (no view changes; app behaves identically)
-- [ ] **1.1**: Memoize thumbnail times + closed-form count → `Thumbnail/StripModel.swift`
+### Wave 1 — Model + renderer (no view changes; app behaves identically) — **CLOSED 2026-07-19**
+- [x] **1.1**: Memoize thumbnail times + closed-form count → `Thumbnail/StripModel.swift`
   - Index-based generation (decision 2); memoized full-duration array invalidated only when
     `density` changes (`@ObservationIgnored private var cachedTimes: (density: Double, times: [CMTime])?`);
     new `var thumbnailCount: Int` (closed-form, no array); `thumbnailTimes(in:)` for the prefetch
     range becomes an index-range slice of the memoized array
   - Success: no `while t <= upper` loop remains; `scheduleRender` + view share one array instance
   - Backpressure: clean build; app runs, grid populates at every zoom level
-- [ ] **1.2**: Throttle `cacheVersion` → `Thumbnail/StripModel.swift:190-198`
+- [x] **1.2**: Throttle `cacheVersion` → `Thumbnail/StripModel.swift:190-198`
   - Inside the `for await` loop bump at most every ~100 ms (`ContinuousClock` guard); always bump
     once after the loop completes so the final image is never stranded
   - Success: full zoom-in batch fill produces ≤ ~10 bumps (add a temporary print to count, then remove)
   - Backpressure: clean build; thumbnails still appear progressively during a fill
-- [ ] **1.3**: Half-gap tolerance → `Thumbnail/StripModel.swift:95-97` (decision 7)
+- [x] **1.3**: Half-gap tolerance → `Thumbnail/StripModel.swift:95-97` (decision 7)
   - Success: `tolerance` never returns `.zero`; adjacent cells still visually distinct at zoom 4–6
   - Backpressure: clean build; visual check at density ≈ 5
-- [ ] **1.4**: Generator reuse with batch-ID guard → `Thumbnail/ThumbnailRenderer.swift` (decision 3)
-  - Struct → `@MainActor final class`; keep generator across batches; recreate on bucket change;
-    guarded `cancelAllCGImageGeneration()`
-  - Success: rapid scroll-settle-scroll-settle does not cancel the *new* batch (thumbs fill in);
-    fast pinch on a 5-min clip still does NOT saturate VTDecoderXPCService (regression guard for
-    the 2026-05-28 fix)
-  - Backpressure: clean build under strict concurrency (actor annotation is the risky part)
+- [~] **1.4**: Generator reuse with batch-ID guard → `Thumbnail/ThumbnailRenderer.swift` (decision 3)
+  - **ATTEMPTED AND REVERTED 2026-07-19** (`c0c8609`, reverted by `79a4d5a`). Decision 3 above is
+    **wrong** — see Operational Learnings. Do not retry without the serialisation described there.
 
 ### Wave 2 — View restructuring (depends on 1.1; one file pass over strip + cell)
 - [ ] **2.1**: Rework time observation → `Thumbnail/ThumbnailStripView.swift:475-505` (decision 1)
@@ -220,6 +217,41 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
   observer/activeIndex-wiring (decision 1) — patching it now would just get overwritten. See Wave 2.1
   and the new Acceptance Criterion below.
 
+- (2026-07-19, Wave 1) **The batch-ID guard of decision 3 is unsound — task 1.4 reverted.** Sharing
+  one `AVAssetImageGenerator` broke rendering outright: 191 of 204 batches requested images and got
+  **zero**, with zero decode failures (the stream just finished empty). `cancelAllCGImageGeneration()`
+  is all-or-nothing per generator, so a stale batch's cancel poisons a newer batch's requests on the
+  shared instance. The guard cannot prevent this: at the moment the stale batch cancels, the newer
+  batch has *not yet called* `render()`, so the stale token is still current and the cancel proceeds.
+  **Why it survived review:** `scheduleRender()` only sleeps 80 ms when `isScrolling || isMagnifying`.
+  Scroll- and pinch-driven renders are debounced and appeared to work; the zoom **slider** and
+  keyboard zoom are *not* debounced, call `render()` immediately, and broke. Any future attempt must
+  serialise — a new batch must not touch the shared generator until the previous stream has fully
+  terminated — and must be tested on the **non-debounced** path specifically.
+- (2026-07-19, Wave 1) **Temporary instrumentation paid for itself twice.** A throwaway
+  `print("batch of N images -> M bumps")` in `scheduleRender` is what revealed the 1.4 breakage
+  (requested count ≫ 0, bumps == 1 ⇒ zero images delivered) *and* a second bug in 1.2's own fix:
+  cancelling a batch terminates the `AsyncStream`, so `for await` exits with **zero iterations** and
+  the in-loop `if Task.isCancelled { return }` guard never runs — an unconditional post-loop bump
+  therefore fired a whole-grid invalidation for every cancelled batch (94 in one session while
+  dragging the zoom slider). Fixed with a `pendingSinceBump` flag. Neither bug was visible from
+  reading the code or from a clean build.
+- (2026-07-19, Wave 1) **Same-file tasks cannot be parallel subagents.** 1.1/1.2/1.3 all target
+  `StripModel.swift`; three agents would each read the pre-edit file and clobber each other. Split
+  the wave by *write target*, not by task number.
+- (2026-07-19, Wave 1) **Cache-key design flaw found during smoke, not yet fixed.** `density =
+  pow(2, zoomLevel × 0.6)` is continuous, and thumbnail times are `i / density`, so *every* slider or
+  pinch zoom position generates an entirely fresh set of `timeMillis` cache keys — near-100% miss
+  rate. Width is already bucketed to 60/120/240; density is not. Quantising density to a ladder
+  would let nearby zoom levels share decoded frames. Keyboard zoom (`zoomStep = 0.5`) already lands
+  on repeatable densities and does hit cache. **Open question:** user reports zooming back out to 1.0
+  redraws slowly. Two candidate causes, untested — (A) eviction: `ThumbnailCache` is one 500 MB
+  `NSCache` shared across all buckets, and bucket-240 images (~518 KB) are ~16× bucket-60 (~32 KB),
+  so a zoomed-in session evicts the whole zoomed-out strip; (B) those frames were never cached, since
+  zoom 1.0 spans far more timeline than was ever decoded. Opposite fixes (per-bucket budgets vs wider
+  low-zoom prefetch) — settle it by tracking every stored `ThumbKey` and checking whether misses are
+  on previously-stored keys.
+
 ## Blocked Tasks
 (none)
 
@@ -230,7 +262,7 @@ the debounce. Wave 3.2 settles it empirically before any code is written for it.
 | Wave | Started | Completed | Commits |
 |------|---------|-----------|---------|
 | 0 | 2026-07-10 | 2026-07-10 | baseline (user-driven live, `ps` @ 1Hz on this Mac; clip: `~/Movies/PenumbraSmoke/mp4-long-perf.mp4`, 1280×720 H.264, 30 min): (a) playback/default-zoom avg **91.8%** (range 28–105, n=30s) · (b) playback/max-zoom avg **68.1%** (range 65–72, n=30s) — **unreliable, see Operational Learnings scroll-bug note** · (c) JKL-shuttle-4×/default-zoom avg **104.7%** (range 103.6–105.8, n=30s) · (d) held-arrow-repeat avg **72.3%** (range 68.5–80, n=10s) · (e) zoom-1→12-transition: pre-drag idle avg 14.6% (n=10s) → during-fill avg **120.9%**, peak **188.1%** (n=20s) |
-| 1 | | | |
+| 1 | 2026-07-19 | 2026-07-19 | `53b0ead` 1.1 memoized index-based times + closed-form count, 1.3 half-gap tolerance · `af453c4` 1.2 cacheVersion throttled to ~10/s (256-image batch → 17–18 bumps, cancelled batches → 0) · `c0c8609` 1.4 generator reuse, **reverted** by `79a4d5a` (broke rendering on the non-debounced zoom path — see Operational Learnings). User-smoked live on `mp4-long-perf.mp4`: slider/pinch zoom renders correctly, adjacent cells distinct at zoom 4–6, verdict "snappy". Playback CPU unchanged (~92%, matches Wave 0 (a)) — expected, F1 is Wave 2.1's job. |
 | 2 | | | |
 | 3 | | | |
 | 4 | | | after: (a)__% (b)__% (c)__% (d)__% (e)__% |
