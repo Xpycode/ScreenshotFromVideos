@@ -26,6 +26,7 @@ final class StripModel {
 
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var zoomBaseline: Double = 1.0
+    @ObservationIgnored private var cachedTimes: (density: Double, times: [CMTime])?
 
     init(duration: Double, nominalFPS: Float, cache: ThumbnailCache, renderer: ThumbnailRenderer) {
         self.duration = max(0, duration)
@@ -67,18 +68,50 @@ final class StripModel {
 
     var totalContentWidth: CGFloat { CGFloat(duration) * pointsPerSecond }
 
-    func thumbnailTimes(in range: ClosedRange<Double>) -> [CMTime] {
-        guard density > 0, range.upperBound > range.lowerBound else { return [] }
-        let step = 1.0 / density
-        let lower = max(0, range.lowerBound)
-        let upper = min(duration, range.upperBound)
-        var times: [CMTime] = []
-        var t = (lower / step).rounded(.down) * step
-        while t <= upper {
-            if t >= 0 { times.append(CMTime(seconds: t, preferredTimescale: 600)) }
-            t += step
+    /// Number of thumbnails across the whole clip at the current density,
+    /// without allocating the array. Time at index i is i / density, so the
+    /// largest valid index is floor(duration * density).
+    var thumbnailCount: Int {
+        guard density > 0, duration > 0 else { return 0 }
+        let raw = (duration * density).rounded(.down)
+        guard raw.isFinite else { return 0 }
+        // Clamp before the Int conversion — Double can't exactly represent
+        // values near Int.max, so an unclamped absurd duration/density pair
+        // could round up past Int.max and trap on conversion.
+        let capped = min(raw, 1_000_000_000)
+        return Int(capped) + 1
+    }
+
+    /// Full-clip thumbnail times, memoized per density so the view and
+    /// scheduleRender share one array instance instead of each rebuilding it.
+    var allTimes: [CMTime] {
+        if let cached = cachedTimes, cached.density == density {
+            return cached.times
         }
+        let count = thumbnailCount
+        let times = (0..<count).map { CMTime(seconds: Double($0) / density, preferredTimescale: 600) }
+        cachedTimes = (density, times)
         return times
+    }
+
+    func thumbnailTimes(in range: ClosedRange<Double>) -> [CMTime] {
+        guard density > 0, range.upperBound > range.lowerBound, thumbnailCount > 0 else { return [] }
+        let all = allTimes
+        if range.lowerBound <= 0 && range.upperBound >= duration {
+            // O(1) copy-on-write share of the whole-clip array.
+            return all
+        }
+        // Index generation makes times[i] == i / density exact (the old
+        // accumulating `t += step` loop drifted in floating point), which is
+        // what lets the active-cell index be computed as round(seconds *
+        // density) without off-by-one. Cache keys (timeMillis) shift
+        // slightly versus the old drifted values, so the in-memory thumbnail
+        // cache re-fills once per session — acceptable, the cache is
+        // per-session.
+        let loIdx = max(0, Int((max(0, range.lowerBound) * density).rounded(.down)))
+        let hiIdx = min(thumbnailCount - 1, Int((min(duration, range.upperBound) * density).rounded(.down)))
+        guard loIdx <= hiIdx else { return [] }
+        return Array(all[loIdx...hiIdx])
     }
 
     var prefetchRange: ClosedRange<Double> {
@@ -93,7 +126,13 @@ final class StripModel {
     }
 
     var tolerance: CMTime {
-        density < 5 ? CMTime(seconds: 0.5, preferredTimescale: 600) : .zero
+        // Half the inter-thumbnail gap at every density: adjacent targets'
+        // tolerance windows touch but never overlap, so neighbouring cells
+        // still resolve to distinct frames while the decoder gets latitude
+        // to snap to a nearby keyframe. Strip-thumbnail tolerance only —
+        // export/extraction tolerances live elsewhere and must not change.
+        guard density > 0 else { return CMTime(seconds: 0.5, preferredTimescale: 600) }
+        return CMTime(seconds: 0.5 / density, preferredTimescale: 600)
     }
 
     func onZoomChange(magnification: Double) {
@@ -164,7 +203,7 @@ final class StripModel {
         let bucket = widthBucket
         let tol = tolerance
         let range = prefetchRange
-        let allTimes = thumbnailTimes(in: range)
+        let batchTimes = thumbnailTimes(in: range)
         let visibleCenter = (visibleTimeRange.lowerBound + visibleTimeRange.upperBound) / 2
         let shouldDebounce = isScrolling || isMagnifying
         task = Task { [weak self] in
@@ -173,7 +212,7 @@ final class StripModel {
                 if Task.isCancelled { return }
             }
             guard let self else { return }
-            let missing = allTimes.filter { time in
+            let missing = batchTimes.filter { time in
                 let key = ThumbKey(
                     timeMillis: Int64((CMTimeGetSeconds(time) * 1000).rounded()),
                     widthBucket: bucket
@@ -194,6 +233,9 @@ final class StripModel {
                     widthBucket: bucket
                 )
                 self.cache.store(image, for: key, cost: ThumbnailCache.cost(of: image))
+                // TODO(wave-1.2): throttle these bumps — one per streamed image means up to
+                // 256 whole-grid SwiftUI invalidations per batch. Target: <= ~10 bumps per
+                // full batch fill, while never stranding the final image un-displayed.
                 self.cacheVersion &+= 1
             }
         }
