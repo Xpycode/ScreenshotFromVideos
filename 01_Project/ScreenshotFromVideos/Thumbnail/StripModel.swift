@@ -198,6 +198,14 @@ final class StripModel {
     // VTDecoderXPCService and lock up the system.
     private static let maxInFlight = 256
 
+    // A cacheVersion bump invalidates the whole grid, so bumping per decoded
+    // image means up to `maxInFlight` invalidations per batch. ~100 ms caps
+    // that at ~10/s — fast enough to still read as a progressive fill, slow
+    // enough that the grid isn't re-evaluated per image. Note a slow fill
+    // (images arriving further apart than this) bumps on every image, which
+    // is the right behavior: few images, each should appear promptly.
+    private static let cacheVersionThrottle: Duration = .milliseconds(100)
+
     func scheduleRender() {
         task?.cancel()
         let bucket = widthBucket
@@ -226,6 +234,14 @@ final class StripModel {
                 abs(CMTimeGetSeconds($0) - visibleCenter) < abs(CMTimeGetSeconds($1) - visibleCenter)
             }
             let capped = Array(prioritized.prefix(Self.maxInFlight))
+            // nil means "nothing bumped yet", so the batch's first image lands
+            // immediately instead of waiting out a throttle window.
+            var lastBump: ContinuousClock.Instant?
+            // Images stored but not yet signalled to the grid. Also stays false
+            // for a batch cancelled before its first image, which is the common
+            // case while dragging the zoom slider — without this those batches
+            // would each fire a whole-grid invalidation for nothing.
+            var pendingSinceBump = false
             for await (time, image) in self.renderer.render(times: capped, targetWidth: bucket, tolerance: tol) {
                 if Task.isCancelled { return }
                 let key = ThumbKey(
@@ -233,9 +249,18 @@ final class StripModel {
                     widthBucket: bucket
                 )
                 self.cache.store(image, for: key, cost: ThumbnailCache.cost(of: image))
-                // TODO(wave-1.2): throttle these bumps — one per streamed image means up to
-                // 256 whole-grid SwiftUI invalidations per batch. Target: <= ~10 bumps per
-                // full batch fill, while never stranding the final image un-displayed.
+                pendingSinceBump = true
+                let now = ContinuousClock.now
+                let due = lastBump.map { now - $0 >= Self.cacheVersionThrottle } ?? true
+                if due {
+                    lastBump = now
+                    pendingSinceBump = false
+                    self.cacheVersion &+= 1
+                }
+            }
+            // Whatever the throttle swallowed since the last bump is sitting in
+            // the cache undisplayed; this is what un-strands it.
+            if pendingSinceBump {
                 self.cacheVersion &+= 1
             }
         }
