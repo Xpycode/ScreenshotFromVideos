@@ -1,6 +1,6 @@
 # PROJECT_STATE — ScreenshotFromVideos
 
-*Last updated: 2026-07-18 — slimmed to the lean digest. Full narrative lives in `sessions/`, rationale in `decisions.md`.*
+*Last updated: 2026-07-19 — Wave 1 closed. Full narrative lives in `sessions/`, rationale in `decisions.md`.*
 
 ## Identity
 macOS app that extracts still frames from a video as PNGs — every Nth frame or hand-picked timestamps — with optional timestamp burn-in and chronological filename numbering. Built to feed Claude Code visual context from screen recordings. Also exports JPG / HEIC / WebP.
@@ -21,7 +21,6 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 - **2026-07-09** — Got the app building + running on this Mac (rebuilt the Syncthing-stripped git repo from GitHub, ad-hoc signed). Shipped playback transport: J/K/L shuttle, Space/K play-pause, ⌥/⇧ arrow jumps, plus a debounce that fixed scrub jitter.
 - **2026-06-12** — Live UI polish from the running app: working zoom buttons, arrow-key strip nav, always-visible transport bar, timestamp burn-in fixed (was a font-size bug), Show-in-Finder, filename time-tokens, Q/⌘C capture-vs-copy. Merged the whole stack to `main` and pushed to a new public GitHub repo. Added a README + Sparkle "Check for Updates" + a release kit.
 - **2026-05-29** — Added WebP export via a third-party encoder (macOS's ImageIO can't write WebP). Quality/effort slider + lossless toggle; 4K smoke passed (lossless turned out near-lossless, not bit-exact — accepted, tooltip corrected).
-- **2026-05-28** — Closed the thumbnail-strip phase. Shipped frame-count preview, multi-format export (PNG/JPG/HEIC), and a clearer Unload button. Fixed a CPU-saturation bug from fast pinch on a long clip.
 
 ## Backlog (none blocking)
 - **Perf tuning ideas:** raise default zoom 1.0 → ~3 for a friendlier first view; re-tune prefetch pads for the grid layout; tune the 256 in-flight decode cap per hardware.
@@ -34,6 +33,6 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 - **Build:** xcodegen drives the `.xcodeproj` from `01_Project/project.yml`; run `cd 01_Project && xcodegen generate` after adding/moving any `.swift` file.
 
 ## Detail (read only if needed)
-- **Decisions + rationale** → `docs/decisions.md` (§1–§7, plus a 2026-07-18 Condensed Log of three migrated entries).
+- **Decisions + rationale** → `docs/decisions.md` (§1–§8, plus a 2026-07-18 Condensed Log of three migrated entries).
 - **Session-by-session history** → `docs/sessions/_index.md`.
 - **Active perf plan** → `IMPLEMENTATION_PLAN.md` (repo root) — 5 waves, traps documented.

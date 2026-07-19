@@ -51,7 +51,7 @@ Decisions appear in roughly chronological order within each topic so the path of
 **Date:** Phase 1 (export pipeline), reaffirmed Phase 5 Wave 6.1 (thumbnail renderer)
 **Decision:** Any consumer of `images(for:)` MUST wrap the loop in `withTaskCancellationHandler` with `onCancel: { generator.cancelAllCGImageGeneration() }`.
 **Why:** `images(for:)` does NOT honor Swift `Task` cancellation promptly. `task.cancel()` flips the flag but the AsyncSequence keeps yielding while VTDecoderXPCService keeps decoding. Confirmed twice in this project — once during export, once when fast pinch on a 5-min clip saturated VTDecoderXPCService at 430% CPU and made the Mac unresponsive (2026-05-28 Wave 6.1).
-**Consequences:** Belt-and-suspenders. `Task.checkCancellation()` inside the loop is still useful but it's not sufficient on its own.
+**Consequences:** Belt-and-suspenders. `Task.checkCancellation()` inside the loop is still useful but it's not sufficient on its own. **See §8** — this cancellation requirement is exactly what makes sharing one generator across batches unsafe.
 
 ### Concurrency shape: `@MainActor @Observable` view-model with one `Task<Void, Never>`
 **Date:** Phase 2
@@ -336,6 +336,33 @@ WebP support, planned and executed across 2026-05-29 (Waves A–D) on branch `po
 **Date:** 2026-05-29 (Wave B)
 **Decision:** `ExtractionViewModel.startExtraction` line 239: `"wrote N PNG"` → uses `request.format.rawValue`.
 **Why:** Pre-existing bug surfaced during recon — the message hardcoded "PNG" regardless of format, silently wrong for JPG/HEIC since the multi-format ship (2026-05-28, §6). Fixed opportunistically since the request shape was already being touched.
+
+---
+
+## 8. Strip Performance Pass (2026-07-19, Wave 1)
+
+### One `AVAssetImageGenerator` per render batch — reuse is unsafe
+**Date:** 2026-07-19 (Wave 1, task 1.4 — attempted `c0c8609`, reverted `79a4d5a`)
+**Decision:** `ThumbnailRenderer` creates a **fresh** `AVAssetImageGenerator` for every `render(...)` call. Do not cache or share one across batches, with or without a batch-ID guard.
+**Context:** A new generator per batch tears down and renegotiates the decoder session on every scroll- and zoom-settle. The performance plan (finding F4, MED severity) proposed reusing one, guarded by a monotonically increasing batch ID so a stale batch's cancellation handler would only fire if it was still the current batch.
+**Why it fails:** `cancelAllCGImageGeneration()` is **all-or-nothing per generator** — AVFoundation offers no per-request cancel. Combined with §3's rule that every `images(for:)` consumer *must* call it on cancellation, a stale batch's teardown necessarily poisons a newer batch's requests on a shared instance. The batch-ID guard cannot help: `scheduleRender()` cancels the prior task **synchronously**, and the successor has not yet called `render()` at that moment, so the stale token is still current and the cancel proceeds — straight into the generator the new batch is about to use.
+**Measured:** 191 of 204 batches requested images and received **zero**, with zero decode failures; the stream simply finished empty.
+**Why it survived review:** `scheduleRender()` only sleeps 80 ms when `isScrolling || isMagnifying`. Scroll- and pinch-driven renders are debounced and appeared to work. The zoom **slider** and keyboard zoom are not debounced, call `render()` immediately, and broke. A clean build, `SWIFT_STRICT_CONCURRENCY=complete`, and a scroll-based smoke test all passed it; only a live slider drag exposed it.
+**Consequences:** Per-batch generators also restore the *accidental* isolation the 2026-05-28 decoder-saturation fix depends on — a stale batch can only ever cancel its own decodes. If reuse is revisited, it requires true serialisation (a new batch must not touch the shared generator until the previous stream has fully terminated) and **must be tested on the non-debounced zoom path specifically**. Wave 4.2's re-measurement should establish whether generator churn costs anything measurable before that complexity is taken on.
+
+### `cacheVersion` is throttled, and its completion bump is conditional
+**Date:** 2026-07-19 (Wave 1, task 1.2 — `af453c4`)
+**Decision:** Bump `cacheVersion` at most every 100 ms (leading-edge) while streaming decoded images, plus one completion bump **gated on a `pendingSinceBump` flag**.
+**Why time-based, not count-based:** A slow fill whose images arrive further apart than the interval still bumps on every image — correct, since few images should each appear promptly. A count-based throttle ("every 16th image") makes exactly that case feel stalled, because it couples to batch size rather than to human perception.
+**Why the completion bump must be conditional:** Cancelling a batch terminates the `AsyncStream`, so `for await` exits with **zero iterations** — and the in-loop `if Task.isCancelled { return }` guard never runs, because it lives inside the loop body. An unconditional post-loop bump therefore fires a whole-grid invalidation for every cancelled batch. Dragging the zoom slider cancels constantly: instrumentation counted 94 such no-op invalidations in a single session.
+**Measured:** 256-image batch → 17–18 bumps (was 256). Cancelled batches → 0 (was 1 each).
+**Consequences:** `cacheVersion` must stay in `ThumbnailCellView`'s `==` when Wave 2.4 adds `Equatable` — if equality skips the body, `.onChange(of: cacheVersion)` never sees the new value and images stop refreshing.
+
+### Thumbnail seek tolerance is half the inter-thumbnail gap
+**Date:** 2026-07-19 (Wave 1, task 1.3 — `53b0ead`)
+**Decision:** Strip thumbnail tolerance is `0.5 / density` at every density, replacing the old `density < 5 ? 0.5s : .zero`.
+**Why:** `.zero` is the most expensive decode mode and it was engaging precisely when request volume peaks. Half the gap means adjacent targets' tolerance windows touch but never overlap, so neighbouring cells still resolve to distinct frames while the decoder gets latitude to snap to a nearby keyframe.
+**Consequences:** Strip thumbnails only. Export/extraction tolerance stays `.zero` (§3) — that path needs frame-exact output.
 
 ---
 
