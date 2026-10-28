@@ -10,27 +10,31 @@ import SwiftUI
 import CoreMedia
 import AppKit
 
-struct ThumbnailCellView: View {
+struct ThumbnailCellView: View, Equatable {
     let time: CMTime
     let widthBucket: Int
     let displaySize: CGSize
     let cache: ThumbnailCache
     let cacheVersion: Int
+    let playerIdentity: ObjectIdentifier?
+    let captureOwnerIdentity: ObjectIdentifier
     let onTap: (CMTime) -> Void
     let onCmdTap: (CMTime) -> Void
-    var manualPinned: Bool = false
+    let manualPinned: Bool
 
     // Holds the last successfully-displayed exact-match image so the cell can
     // bridge zoom transitions (new bucket OR new density timestamps) without
     // flashing to a placeholder. Cell-scoped; evaporates on lazy unload.
     @State private var lastImage: CGImage?
 
-    // Tracks ⌘ held via onModifierKeysChanged (macOS 15+). TapGesture.modifiers(.command)
-    // is still reported flaky on macOS into 2025 — this is the recommended replacement.
-    @State private var isCommandHeld: Bool = false
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.widthBucket == rhs.widthBucket && lhs.time == rhs.time &&
+        lhs.displaySize == rhs.displaySize && lhs.cache === rhs.cache &&
+        lhs.cacheVersion == rhs.cacheVersion && lhs.manualPinned == rhs.manualPinned &&
+        lhs.playerIdentity == rhs.playerIdentity && lhs.captureOwnerIdentity == rhs.captureOwnerIdentity
+    }
 
     var body: some View {
-        let _ = cacheVersion
         Group {
             if let img = bestImage() {
                 Image(decorative: img, scale: 2)
@@ -62,11 +66,8 @@ struct ThumbnailCellView: View {
         // hit-tests by layout shape, but the conditional Group can collapse
         // its implicit hit region during the placeholder branch.
         .contentShape(Rectangle())
-        .onModifierKeysChanged(mask: .command, initial: false) { _, new in
-            isCommandHeld = new.contains(.command)
-        }
         .onTapGesture {
-            if isCommandHeld || NSEvent.modifierFlags.contains(.command) {
+            if NSEvent.modifierFlags.contains(.command) {
                 onCmdTap(time)
             } else {
                 onTap(time)
@@ -82,7 +83,7 @@ struct ThumbnailCellView: View {
         ThumbKey(timeMillis: timeMillis, widthBucket: widthBucket)
     }
 
-    private var cellIdentity: String { "\(timeMillis)-\(widthBucket)" }
+    private var cellIdentity: ThumbKey { exactKey }
 
     private func bestImage() -> CGImage? {
         if let img = cache.image(for: exactKey) { return img }

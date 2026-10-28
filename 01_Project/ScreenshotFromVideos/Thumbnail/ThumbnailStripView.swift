@@ -18,7 +18,10 @@ struct ThumbnailStripView: View {
     let player: AVPlayer?
     let vm: ExtractionViewModel
 
-    @State private var currentTime: CMTime = .zero
+    @State private var activeIndex: Int = -1
+    @State private var visibleRows: ClosedRange<Int> = 0...0
+    @State private var followScrollWork: Task<Void, Never>?
+    @State private var playbackScrollTarget: Int?
     // Drives keyboard focus for the grid. The +/-/0/m/arrow handlers only fire
     // while the strip holds focus, so we claim it on cell-tap and re-claim it
     // after a zoom-button click (which would otherwise steal focus).
@@ -30,9 +33,6 @@ struct ThumbnailStripView: View {
     // Columns visible per row, tracked from scroll geometry so ↑/↓ arrow
     // navigation can step a whole row instead of a single cell.
     @State private var cellsPerRow: Int = 1
-    // Reflects player.timeControlStatus so the transport bar's play/pause icon
-    // stays correct even when playback stops on its own (reaches end).
-    @State private var isPlaying: Bool = false
     // Debounces the seek-driven auto-scroll so a scrub storm (many >0.5s jumps
     // in a row) resolves to a single scrollTo once the playhead settles,
     // instead of stacking interrupted animations + render churn. See
@@ -46,84 +46,11 @@ struct ThumbnailStripView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            transportBar
+            StripTransportBar(model: model, player: player,
+                              togglePlayPause: togglePlayPause, stripFocused: $stripFocused)
             grid
             zoomControlRow
         }
-    }
-
-    // MARK: - Transport bar (play/pause · selected-frame timecode · zoom scale)
-
-    private var transportBar: some View {
-        HStack(spacing: 12) {
-            Button {
-                togglePlayPause()
-            } label: {
-                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 15))
-                    .frame(width: 16)
-            }
-            .buttonStyle(.plain)
-            .focusable(false)
-            .foregroundStyle(Theme.primaryText)
-            .help("Play/Pause (Space) · J/K/L shuttle · ⌥←→ jump 30s · ⇧←→ jump 1min")
-
-            // Selected frame: frame-accurate timecode + absolute frame index.
-            // The frame number rides in a worst-case-width field (hidden
-            // template) so the right-hand scale doesn't jitter as it ticks.
-            HStack(spacing: 6) {
-                Text(timecodeString)
-                Text("·")
-                    .foregroundStyle(Theme.secondaryText)
-                ZStack(alignment: .leading) {
-                    Text("frame \(totalFrames)").hidden()
-                    Text("frame \(frameNumber)")
-                }
-                .foregroundStyle(Theme.secondaryText)
-            }
-            .font(.system(size: 14, weight: .thin).monospacedDigit())
-
-            Spacer()
-
-            // Zoom scale: how many source frames fall between two thumbnails,
-            // plus the real-time gap. Collapses to "every frame · 1:1" at max.
-            HStack(spacing: 5) {
-                Image(systemName: "ruler")
-                    .font(.system(size: 10))
-                Text(scaleString)
-            }
-            .font(.system(size: 11, weight: .regular).monospacedDigit())
-            .foregroundStyle(Theme.secondaryText)
-            .help("Spacing between thumbnails at the current zoom")
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Theme.secondaryBackground)
-    }
-
-    private var timecodeString: String {
-        TimestampFormatter.timecode(from: currentTime, fps: model.nominalFPS)
-    }
-
-    private var frameNumber: Int {
-        TimestampFormatter.frameNumber(from: currentTime, fps: model.nominalFPS)
-    }
-
-    private var totalFrames: Int {
-        TimestampFormatter.frameNumber(
-            from: CMTime(seconds: model.duration, preferredTimescale: 600),
-            fps: model.nominalFPS
-        )
-    }
-
-    private var scaleString: String {
-        let n = model.framesPerThumbnail
-        if n <= 1 { return "every frame · 1:1" }
-        let secs = model.secondsPerThumbnail
-        let gap = secs < 1
-            ? String(format: "%.0fms", secs * 1000)
-            : String(format: "%.2fs", secs)
-        return "every \(n) fr · \(gap)"
     }
 
     private func togglePlayPause() {
@@ -189,14 +116,17 @@ struct ThumbnailStripView: View {
                     columns: [GridItem(.adaptive(minimum: cellW, maximum: cellW), spacing: 1)],
                     spacing: 1
                 ) {
-                    let activeIdx = activeIndex
-                    ForEach(Array(times.enumerated()), id: \.offset) { idx, time in
+                    let allTimes = times
+                    ForEach(allTimes.indices, id: \.self) { idx in
+                        let time = allTimes[idx]
                         ThumbnailCellView(
                             time: time,
                             widthBucket: model.widthBucket,
                             displaySize: CGSize(width: cellW, height: cellH),
                             cache: model.cache,
                             cacheVersion: model.cacheVersion,
+                            playerIdentity: playerIdentity,
+                            captureOwnerIdentity: ObjectIdentifier(vm),
                             onTap: { tappedTime in
                                 player?.seek(
                                     to: tappedTime,
@@ -210,20 +140,29 @@ struct ThumbnailStripView: View {
                             },
                             manualPinned: isPinned(at: time)
                         )
+                        .equatable()
                         .frame(width: cellW, height: cellH)
                         .id(idx)
-                        .overlay(
-                            // Decorative — allowsHitTesting(false) so the full-rect
-                            // overlay doesn't swallow taps on the active cell.
-                            Rectangle()
-                                .strokeBorder(Theme.accent, lineWidth: idx == activeIdx ? 2 : 0)
-                                .allowsHitTesting(false)
-                        )
+                        .anchorPreference(key: ActiveCellBoundsKey.self, value: .bounds) {
+                            idx == activeIndex ? $0 : nil
+                        }
                     }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .overlayPreferenceValue(ActiveCellBoundsKey.self) { anchor in
+                    GeometryReader { geometry in
+                        if let anchor {
+                            let bounds = geometry[anchor]
+                            Rectangle()
+                                .strokeBorder(Theme.accent, lineWidth: 2)
+                                .frame(width: bounds.width, height: bounds.height)
+                                .position(x: bounds.midX, y: bounds.midY)
+                        }
+                    }
+                    .allowsHitTesting(false)
+                }
             }
             .onChange(of: seekScrollTarget) { _, target in
                 guard let target else { return }
@@ -231,6 +170,12 @@ struct ThumbnailStripView: View {
                     proxy.scrollTo(target, anchor: .center)
                 }
                 seekScrollTarget = nil
+            }
+            .onChange(of: playbackScrollTarget) { _, target in
+                guard let target else { return }
+                // Continuous following must not stack/restart scroll animations.
+                proxy.scrollTo(target, anchor: .center)
+                playbackScrollTarget = nil
             }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.secondaryBackground)
@@ -326,16 +271,16 @@ struct ThumbnailStripView: View {
             return .handled
         }
         .onScrollGeometryChange(for: Int.self) { geom in
-            max(1, Int((geom.containerSize.width - 16) / (cellW + 1)))
+            columnCount(for: geom.containerSize.width)
         } action: { _, new in
             cellsPerRow = new
         }
         .onScrollGeometryChange(for: ClosedRange<Double>.self) { geom in
-            let count = times.count
+            let count = model.thumbnailCount
             guard count > 0, model.density > 0 else { return 0...0 }
-            let cellsPerRow = max(1, Int((geom.containerSize.width - 16) / (cellW + 1)))
-            let firstRow = max(0, Int(geom.contentOffset.y / rowH))
-            let lastRow = Int((geom.contentOffset.y + geom.containerSize.height) / rowH)
+            let cellsPerRow = columnCount(for: geom.containerSize.width)
+            let firstRow = max(0, Int(floor((geom.contentOffset.y - 4) / rowH)))
+            let lastRow = max(firstRow, Int(floor((geom.contentOffset.y + geom.containerSize.height - 4) / rowH)))
             let firstIdx = min(count - 1, firstRow * cellsPerRow)
             let lastIdx = min(count - 1, (lastRow + 1) * cellsPerRow - 1)
             let lower = Double(firstIdx) / model.density
@@ -352,8 +297,19 @@ struct ThumbnailStripView: View {
         .task(id: playerIdentity) {
             await observePlayerTime()
         }
-        .task(id: playerIdentity) {
-            await observePlaybackStatus()
+        .onScrollGeometryChange(for: ClosedRange<Int>.self) { geom in
+            // Prefer fully visible rows so following starts before the border is clipped.
+            let first = max(0, Int(ceil((geom.contentOffset.y - 4) / rowH)))
+            let last = max(first, Int(floor((geom.contentOffset.y + geom.containerSize.height - 4 - cellH) / rowH)))
+            return first...last
+        } action: { _, rows in
+            visibleRows = rows
+        }
+        .onChange(of: model.density) { _, _ in
+            updateActiveIndex(at: player?.currentTime() ?? .zero)
+        }
+        .onChange(of: activeIndex) { _, _ in
+            schedulePlaybackFollow()
         }
         .task {
             await monitorCmdScrollWheel()
@@ -406,7 +362,7 @@ struct ThumbnailStripView: View {
             .buttonStyle(.plain)
             .focusable(false)
             .foregroundStyle(Theme.secondaryText)
-            .help("Reset zoom (⌘0)")
+            .help("Reset zoom (Command-0)")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
@@ -455,15 +411,35 @@ struct ThumbnailStripView: View {
         seekScrollTarget = target
     }
 
-    private var activeIndex: Int {
-        guard model.density > 0, !times.isEmpty else { return -1 }
-        // Round to nearest, not floor. With sample-accurate seek + irrational
-        // density (e.g. pow(2, 0.6) ≈ 1.516), AVPlayer reports currentTime as
-        // the landed frame's *start* time, which is generally < the seek
-        // target — floor then drops to the previous cell. Round-to-nearest
-        // tolerates that ε and gives "the cell whose timestamp is closest."
-        let raw = Int((CMTimeGetSeconds(currentTime) * model.density).rounded())
-        return max(0, min(times.count - 1, raw))
+    private func columnCount(for width: CGFloat) -> Int {
+        // N cells occupy N * cellW + (N - 1) points, inside the 8-point margins.
+        max(1, Int((width - 16 + 1) / (cellW + 1)))
+    }
+
+    private func updateActiveIndex(at time: CMTime) {
+        let seconds = CMTimeGetSeconds(time)
+        guard model.thumbnailCount > 0, seconds.isFinite else {
+            if activeIndex != -1 { activeIndex = -1 }
+            return
+        }
+        let raw = (max(0, min(model.duration, seconds)) * model.density).rounded()
+        let index = min(model.thumbnailCount - 1, Int(raw))
+        if activeIndex != index { activeIndex = index }
+    }
+
+    private func schedulePlaybackFollow() {
+        guard activeIndex >= 0, seekScrollWork == nil, followScrollWork == nil,
+              !visibleRows.contains(activeIndex / cellsPerRow) else { return }
+        // Throttle, not trailing debounce: later playback ticks update activeIndex
+        // without restarting this timer, even at one thumbnail per video frame.
+        followScrollWork = Task { @MainActor in
+            do { try await Task.sleep(for: .milliseconds(80)) }
+            catch { return }
+            followScrollWork = nil
+            guard seekScrollWork == nil, activeIndex >= 0,
+                  !visibleRows.contains(activeIndex / cellsPerRow) else { return }
+            playbackScrollTarget = activeIndex
+        }
     }
 
     // MARK: - Player time observation
@@ -473,42 +449,178 @@ struct ThumbnailStripView: View {
     }
 
     private func observePlayerTime() async {
-        guard let player else { return }
-        let interval = CMTime(value: 1, timescale: 30)
-        let token = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { @Sendable time in
-            Task { @MainActor in
-                let prevSec = CMTimeGetSeconds(currentTime)
-                currentTime = time
-                // A seek shows up as a >0.5 s jump (natural per-tick deltas are
-                // ≤1/30 s at this observer interval). Bring the active cell into
-                // view so player-side seeking and the strip stay synced — but
-                // *debounced*: dragging the scrubber emits a storm of such jumps,
-                // and animating a scrollTo on every one makes the grid flail and
-                // thrashes the render queue. Reschedule on each jump; the scroll
-                // fires ~150 ms after the last one, i.e. once the drag settles.
-                if abs(CMTimeGetSeconds(time) - prevSec) > 0.5 {
-                    seekScrollWork?.cancel()
-                    seekScrollWork = Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(150))
-                        if Task.isCancelled { return }
-                        seekScrollTarget = activeIndex
-                    }
+        guard let player else { activeIndex = -1; return }
+        var previousTime = player.currentTime()
+        let lifetime = TimeObservationLifetime()
+        updateActiveIndex(at: previousTime)
+        let update: @MainActor (CMTime) -> Void = { time in
+            guard lifetime.isActive else { return }
+            let delta = abs(CMTimeGetSeconds(time) - CMTimeGetSeconds(previousTime))
+            previousTime = time
+            updateActiveIndex(at: time)
+            // Preserve seek-sized jump detection and the 150 ms trailing debounce.
+            if delta > 0.5 {
+                followScrollWork?.cancel()
+                followScrollWork = nil
+                seekScrollWork?.cancel()
+                seekScrollWork = Task { @MainActor in
+                    do { try await Task.sleep(for: .milliseconds(150)) }
+                    catch { return }
+                    seekScrollWork = nil
+                    seekScrollTarget = activeIndex
                 }
             }
         }
-        defer { player.removeTimeObserver(token) }
-        do {
-            try await Task.sleep(nanoseconds: .max)
-        } catch {
-            // cancelled — defer cleans up
+        let token = player.addPeriodicTimeObserver(
+            forInterval: CMTime(value: 1, timescale: 30), queue: .main
+        ) { @Sendable time in
+            MainActor.assumeIsolated { update(time) }
         }
+        defer {
+            lifetime.isActive = false
+            player.removeTimeObserver(token)
+            seekScrollWork?.cancel()
+            seekScrollWork = nil
+            followScrollWork?.cancel()
+            followScrollWork = nil
+        }
+        do { try await Task.sleep(nanoseconds: .max) }
+        catch { /* Cancellation removes the observer and pending scrolling. */ }
+    }
+}
+
+/// Shared only on the main actor; queued observer callbacks become inert on teardown.
+@MainActor
+private final class TimeObservationLifetime {
+    var isActive = true
+}
+
+/// Resolve the selected cell's actual bounds, preserving adaptive-grid packing
+/// and alignment at fractional widths without duplicating SwiftUI layout math.
+private struct ActiveCellBoundsKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        if let next = nextValue() { value = next }
+    }
+}
+
+/// Owns the 30 Hz readout state so time ticks never invalidate the grid.
+private struct StripTransportBar: View {
+    let model: StripModel
+    let player: AVPlayer?
+    let togglePlayPause: () -> Void
+    let stripFocused: FocusState<Bool>.Binding
+    @State private var currentTime: CMTime = .zero
+    @State private var isPlaying = false
+
+    // MARK: - Transport bar (play/pause · selected-frame timecode · zoom scale)
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button {
+                togglePlayPause()
+                stripFocused.wrappedValue = true
+            } label: {
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 15))
+                    .frame(width: 16)
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .foregroundStyle(Theme.primaryText)
+            .help("Play/Pause (Space) · J/K/L shuttle · Option-Left/Right Arrow jump 30s · Shift-Left/Right Arrow jump 1min")
+
+            // Selected frame: frame-accurate timecode + absolute frame index.
+            // The frame number rides in a worst-case-width field (hidden
+            // template) so the right-hand scale doesn't jitter as it ticks.
+            HStack(spacing: 6) {
+                Text(timecodeString)
+                Text("·")
+                    .foregroundStyle(Theme.secondaryText)
+                ZStack(alignment: .leading) {
+                    Text("frame \(totalFrames)").hidden()
+                    Text("frame \(frameNumber)")
+                }
+                .foregroundStyle(Theme.secondaryText)
+            }
+            .font(.system(size: 14, weight: .thin).monospacedDigit())
+
+            Spacer()
+
+            // Zoom scale: how many source frames fall between two thumbnails,
+            // plus the real-time gap. Collapses to "every frame · 1:1" at max.
+            HStack(spacing: 5) {
+                Image(systemName: "ruler")
+                    .font(.system(size: 10))
+                Text(scaleString)
+            }
+            .font(.system(size: 11, weight: .regular).monospacedDigit())
+            .foregroundStyle(Theme.secondaryText)
+            .help("Spacing between thumbnails at the current zoom")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Theme.secondaryBackground)
+        .task(id: playerIdentity) { await observePlayerTime() }
+        .task(id: playerIdentity) { await observePlaybackStatus() }
+    }
+
+    private var timecodeString: String {
+        TimestampFormatter.timecode(from: currentTime, fps: model.nominalFPS)
+    }
+
+    private var frameNumber: Int {
+        TimestampFormatter.frameNumber(from: currentTime, fps: model.nominalFPS)
+    }
+
+    private var totalFrames: Int {
+        TimestampFormatter.frameNumber(
+            from: CMTime(seconds: model.duration, preferredTimescale: 600),
+            fps: model.nominalFPS
+        )
+    }
+
+    private var scaleString: String {
+        let n = model.framesPerThumbnail
+        if n <= 1 { return "every frame · 1:1" }
+        let secs = model.secondsPerThumbnail
+        let gap = secs < 1
+            ? String(format: "%.0fms", secs * 1000)
+            : String(format: "%.2fs", secs)
+        return "every \(n) fr · \(gap)"
+    }
+
+    private var playerIdentity: ObjectIdentifier? {
+        player.map { ObjectIdentifier($0) }
+    }
+
+    private func observePlayerTime() async {
+        guard let player else { currentTime = .zero; return }
+        currentTime = player.currentTime()
+        let lifetime = TimeObservationLifetime()
+        let update: @MainActor (CMTime) -> Void = { time in
+            guard lifetime.isActive else { return }
+            if currentTime != time { currentTime = time }
+        }
+        let token = player.addPeriodicTimeObserver(
+            forInterval: CMTime(value: 1, timescale: 30), queue: .main
+        ) { @Sendable time in
+            MainActor.assumeIsolated { update(time) }
+        }
+        defer {
+            lifetime.isActive = false
+            player.removeTimeObserver(token)
+        }
+        do { try await Task.sleep(nanoseconds: .max) }
+        catch { /* Cancellation removes the observer. */ }
     }
 
     // Mirror AVPlayer's play/pause state into `isPlaying` via KVO so the
     // transport icon is correct even when playback ends on its own (the
     // periodic time observer stops firing once the timebase halts).
     private func observePlaybackStatus() async {
-        guard let player else { return }
+        guard let player else { isPlaying = false; return }
         isPlaying = player.timeControlStatus == .playing
         for await status in player.publisher(for: \.timeControlStatus).values {
             isPlaying = status == .playing
