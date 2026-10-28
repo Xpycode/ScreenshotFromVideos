@@ -1,0 +1,45 @@
+duration=22.0 size=(6240.0, 4160.0) fps=25.0 formats=[<CMVideoFormatDescription 0x77b2c1c5a0 [0x1ee6b8528]> {
+	mediaType:'vide' 
+	mediaSubType:'hvc1' 
+	mediaSpecific: {
+		codecType: 'hvc1'		dimensions: 6240 x 4160 
+	} 
+	extensions: {{
+    BitsPerComponent = 10;
+    CVFieldCount = 1;
+    CVImageBufferChromaLocationBottomField = Left;
+    CVImageBufferChromaLocationTopField = Left;
+    CVImageBufferYCbCrMatrix = "ITU_R_709_2";
+    Depth = 24;
+    FormatName = "'hvc1'";
+    FullRangeVideo = 1;
+    RevisionLevel = 0;
+    SampleDescriptionExtensionAtoms =     {
+        hvcC = {length = 110, bytes = 0x01240800 0000b000 00000000 b7f000fc ... 1092f094 0207d8c8 };
+    };
+    SpatialQuality = 0;
+    TemporalQuality = 0;
+    VerbatimSampleDescription = {length = 222, bytes = 0x000000de 68766331 00000000 00000001 ... 6c630002 00020001 };
+    Version = 0;
+}}
+}]
+ordered=false count=1 seconds=0.16924190521240234
+ordered=false count=10 seconds=0.8152649402618408
+ordered=false count=20 seconds=1.6055139303207397
+ordered=false count=30 seconds=2.301867961883545
+DONE ordered=false success=34 failures=0 seconds=2.6744349002838135
+ordered=true count=1 seconds=0.05477702617645264
+ordered=true count=10 seconds=0.7194119691848755
+ordered=true count=20 seconds=1.4826040267944336
+ordered=true count=30 seconds=2.111456036567688
+DONE ordered=true success=34 failures=0 seconds=2.4816229343414307
+ordered=true count=1 seconds=0.04062998294830322
+ordered=true count=10 seconds=0.7001949548721313
+ordered=true count=20 seconds=1.473567008972168
+ordered=true count=30 seconds=2.0525439977645874
+DONE ordered=true success=34 failures=0 seconds=2.390594005584717
+ordered=false count=1 seconds=0.06951701641082764
+ordered=false count=10 seconds=0.7307029962539673
+ordered=false count=20 seconds=1.5334340333938599
+ordered=false count=30 seconds=2.2077829837799072
+DONE ordered=false success=34 failures=0 seconds=2.585299015045166

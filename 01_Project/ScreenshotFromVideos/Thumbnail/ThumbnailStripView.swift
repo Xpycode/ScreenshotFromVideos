@@ -20,6 +20,8 @@ struct ThumbnailStripView: View {
 
     @State private var activeIndex: Int = -1
     @State private var visibleRows: ClosedRange<Int> = 0...0
+    @State private var scrollViewport = ThumbnailViewport(size: .zero, offsetY: 0)
+    @State private var viewportSize: CGSize = .zero
     @State private var followScrollWork: Task<Void, Never>?
     @State private var playbackScrollTarget: Int?
     // Drives keyboard focus for the grid. The +/-/0/m/arrow handlers only fire
@@ -41,7 +43,6 @@ struct ThumbnailStripView: View {
 
     private var cellW: CGFloat { model.thumbWidth }
     private var cellH: CGFloat { cellW * 9.0 / 16.0 }
-    private var rowH: CGFloat { cellH + 1 }
     private var times: [CMTime] { model.thumbnailTimes(in: 0...model.duration) }
 
     var body: some View {
@@ -270,26 +271,24 @@ struct ThumbnailStripView: View {
             togglePlayPause()
             return .handled
         }
-        .onScrollGeometryChange(for: Int.self) { geom in
-            columnCount(for: geom.containerSize.width)
-        } action: { _, new in
-            cellsPerRow = new
+        // Track raw geometry once. Model/zoom changes must also recompute the
+        // range: they need not cause a scroll-geometry event on a short clip.
+        .onScrollGeometryChange(for: ThumbnailViewport.self) { geometry in
+            ThumbnailViewport(size: geometry.containerSize, offsetY: geometry.contentOffset.y)
+        } action: { _, viewport in
+            scrollViewport = viewport
+            refreshViewport(viewport)
         }
-        .onScrollGeometryChange(for: ClosedRange<Double>.self) { geom in
-            let count = model.thumbnailCount
-            guard count > 0, model.density > 0 else { return 0...0 }
-            let cellsPerRow = columnCount(for: geom.containerSize.width)
-            let firstRow = max(0, Int(floor((geom.contentOffset.y - 4) / rowH)))
-            let lastRow = max(firstRow, Int(floor((geom.contentOffset.y + geom.containerSize.height - 4) / rowH)))
-            let firstIdx = min(count - 1, firstRow * cellsPerRow)
-            let lastIdx = min(count - 1, (lastRow + 1) * cellsPerRow - 1)
-            let lower = Double(firstIdx) / model.density
-            let upper = Double(lastIdx + 1) / model.density
-            let lo = max(0, min(model.duration, lower))
-            let hi = max(lo, min(model.duration, upper))
-            return lo...hi
-        } action: { _, new in
-            model.onVisibleRangeChange(new)
+        // A short contact sheet may never scroll. Measure the actual viewport
+        // independently so the initial split-view layout starts its render too.
+        .onGeometryChange(for: CGSize.self) { geometry in
+            geometry.size
+        } action: { size in
+            viewportSize = size
+            refreshViewport(scrollViewport)
+        }
+        .onChange(of: ObjectIdentifier(model), initial: true) { _, _ in
+            refreshViewport(scrollViewport, forceRender: true)
         }
         .onScrollPhaseChange { _, new in
             model.onScrollPhaseChange(isScrolling: new.isScrolling)
@@ -297,16 +296,12 @@ struct ThumbnailStripView: View {
         .task(id: playerIdentity) {
             await observePlayerTime()
         }
-        .onScrollGeometryChange(for: ClosedRange<Int>.self) { geom in
-            // Prefer fully visible rows so following starts before the border is clipped.
-            let first = max(0, Int(ceil((geom.contentOffset.y - 4) / rowH)))
-            let last = max(first, Int(floor((geom.contentOffset.y + geom.containerSize.height - 4 - cellH) / rowH)))
-            return first...last
-        } action: { _, rows in
-            visibleRows = rows
-        }
         .onChange(of: model.density) { _, _ in
+            refreshViewport(scrollViewport)
             updateActiveIndex(at: player?.currentTime() ?? .zero)
+        }
+        .onChange(of: model.thumbWidth) { _, _ in
+            refreshViewport(scrollViewport)
         }
         .onChange(of: activeIndex) { _, _ in
             schedulePlaybackFollow()
@@ -411,9 +406,22 @@ struct ThumbnailStripView: View {
         seekScrollTarget = target
     }
 
-    private func columnCount(for width: CGFloat) -> Int {
-        // N cells occupy N * cellW + (N - 1) points, inside the 8-point margins.
-        max(1, Int((width - 16 + 1) / (cellW + 1)))
+    private func refreshViewport(_ raw: ThumbnailViewport, forceRender: Bool = false) {
+        // The view's own size is authoritative once layout has measured it;
+        // scroll callbacks can still contain transient container dimensions.
+        let viewport = ThumbnailViewport(
+            size: viewportSize.width > 0 && viewportSize.height > 0 ? viewportSize : raw.size,
+            offsetY: raw.offsetY
+        )
+        guard let projection = viewport.project(
+            cellWidth: cellW, density: model.density,
+            duration: model.duration, count: model.thumbnailCount
+        ) else { return }
+        cellsPerRow = projection.columns
+        visibleRows = projection.fullyVisibleRows
+        if forceRender || model.visibleTimeRange != projection.timeRange {
+            model.onVisibleRangeChange(projection.timeRange)
+        }
     }
 
     private func updateActiveIndex(at time: CMTime) {

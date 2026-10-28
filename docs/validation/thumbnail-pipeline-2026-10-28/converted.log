@@ -1,0 +1,45 @@
+duration=22.0 size=(1920.0, 1280.0) fps=25.000002 formats=[<CMVideoFormatDescription 0x7a848105a0 [0x1ee6b8528]> {
+	mediaType:'vide' 
+	mediaSubType:'avc1' 
+	mediaSpecific: {
+		codecType: 'avc1'		dimensions: 1920 x 1280 
+	} 
+	extensions: {{
+    CVFieldCount = 1;
+    CVImageBufferChromaLocationBottomField = Left;
+    CVImageBufferChromaLocationTopField = Left;
+    CVImageBufferYCbCrMatrix = "ITU_R_709_2";
+    Depth = 24;
+    FormatName = "Lavc63.1.102 libx264";
+    FullRangeVideo = 1;
+    RevisionLevel = 0;
+    SampleDescriptionExtensionAtoms =     {
+        avcC = {length = 49, bytes = 0x01640032 ffe1001c 67640032 acd94078 ... e08cb22c fdf8f800 };
+        btrt = {length = 12, bytes = 0x00000000006cf0b600000000};
+    };
+    SpatialQuality = 0;
+    TemporalQuality = 0;
+    VerbatimISOSampleEntry = {length = 163, bytes = 0x000000a3 61766331 00000000 00000001 ... 006cf0b6 00000000 };
+    Version = 0;
+}}
+}]
+ordered=false count=1 seconds=0.13615500926971436
+ordered=false count=10 seconds=0.5210579633712769
+ordered=false count=20 seconds=1.0981940031051636
+ordered=false count=30 seconds=1.5189080238342285
+DONE ordered=false success=34 failures=0 seconds=1.590474009513855
+ordered=true count=1 seconds=0.013315081596374512
+ordered=true count=10 seconds=0.13494300842285156
+ordered=true count=20 seconds=0.26278603076934814
+ordered=true count=30 seconds=0.3986380100250244
+DONE ordered=true success=34 failures=0 seconds=0.4475409984588623
+ordered=true count=1 seconds=0.02176201343536377
+ordered=true count=10 seconds=0.14737892150878906
+ordered=true count=20 seconds=0.2718850374221802
+ordered=true count=30 seconds=0.40452897548675537
+DONE ordered=true success=34 failures=0 seconds=0.4540269374847412
+ordered=false count=1 seconds=0.03174996376037598
+ordered=false count=10 seconds=0.418815016746521
+ordered=false count=20 seconds=0.9899870157241821
+ordered=false count=30 seconds=1.405683994293213
+DONE ordered=false success=34 failures=0 seconds=1.4796249866485596
