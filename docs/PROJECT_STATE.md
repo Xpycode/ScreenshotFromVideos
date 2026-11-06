@@ -1,6 +1,6 @@
 # PROJECT_STATE — ScreenshotFromVideos
 
-*Last updated: 2026-11-06 — performance plan closed and archived; footer follow-up remains separate.*
+*Last updated: 2026-11-06 — performance plan archived; compact footer and native tooltips accepted.*
 
 ## Identity
 macOS app that extracts still frames from a video as PNGs — every Nth frame or hand-picked timestamps — with optional timestamp burn-in and chronological filename numbering. Built to feed Claude Code visual context from screen recordings. Also exports JPG / HEIC / WebP.
@@ -11,14 +11,14 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 
 ## Now
 - **Phase:** polish after the completed strip/player performance pass.
-- **Focus:** finish the separate compact-footer verification before choosing the next backlog item.
+- **Focus:** compact-footer follow-up complete; choose the next backlog item.
 - **Plan:** none active; [performance archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) records 14 completed tasks and one reverted experiment.
-- **Blockers:** none for performance closeout; footer wide-label/tooltips/action checks remain unreported.
-- **Next:** finish the finite compact-footer checks, then checkpoint that change separately. Run `/check ship` before release.
-- **Current handoff:** [2026-11-06 closeout Resume](sessions/2026-11-06.md#resume--performance-plan-complete).
+- **Blockers:** none for the completed performance and footer work.
+- **Next:** choose the next backlog item; selected app icon integration is ready to consider. Run `/check ship` before release.
+- **Current handoff:** [2026-11-06 footer Resume](sessions/2026-11-06.md#resume--footer-complete).
 
 ## Recent
-- **2026-11-06** — Fresh build and user-confirmed CPU samples complete; independent review found no source defect. Performance plan archived with 14 completed tasks and one reverted experiment.
+- **2026-11-06** — Fresh build and user-confirmed CPU samples complete; independent review found no source defect. Performance plan archived with 14 completed tasks and one reverted experiment. Compact footer/native hover tips also user-accepted after strict build.
 - **2026-11-02** — Resumed Wave 4; user retained progressive fill and revised refresh criterion. Accepted source/artifact checksums match; current-artifact CPU collector prepared.
 - **2026-11-01** — Fixed visible-cell demand, then reproduced an isolated decoder hole and added one fresh retry: real fixture improves 11/12→12/12. Strict build/review pass; manual matrix user-passed; performance closeout remains.
 - **2026-10-29** — Two-minute paused failure reproduced; first trace capped before zoom. Focused trace rebuilt and smoke-verified; repeat capture pending.

@@ -4,7 +4,7 @@
 None. [Strip/player performance completed](docs/sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) November 6: 14 tasks complete, one reverted; evidence limitations retained.
 
 ## Standalone follow-up
-- Minimum-width footer defect (2026-10-29): compact actions implemented; narrow layout user-passed. Wide-label return and tooltip/action checks remain unreported. Source changes preserved separately from the performance checkpoint. See [evidence](docs/validation/window-width-2026-10-29/README.md). Finish these finite checks before treating the footer change as accepted.
+None. Compact footer and native hover tooltips accepted November 6; strict build and all finite user checks passed. See [evidence](docs/validation/window-width-2026-10-29/README.md).
 
 ## Backlog
 - App filename/display-name mismatch (2026-11-01): user asked why `ScreenshotFromVideos.app` differs from Dock/menu name “Stills From Video”. `project.yml` keeps `PRODUCT_NAME: ScreenshotFromVideos` while CFBundleName/CFBundleDisplayName are “Stills From Video”. Consider aligning the bundle filename and updating build/release/handoff paths; keep internal identifiers stable. Deferred while resolving thumbnail fill.

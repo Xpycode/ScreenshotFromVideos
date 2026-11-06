@@ -19,6 +19,40 @@
 import SwiftUI
 import CoreMedia
 import AVFoundation
+import AppKit
+
+private extension View {
+    func footerHelp(_ text: String) -> some View {
+        background(FooterToolTip(text: text))
+            .accessibilityHint(text)
+    }
+}
+
+/// Native hover help, independent of SwiftUI's help registration in ViewThatFits.
+/// The background follows the final button bounds without participating in layout.
+private struct FooterToolTip: NSViewRepresentable {
+    let text: String
+
+    func makeNSView(context: Context) -> ToolTipView {
+        let view = ToolTipView()
+        view.toolTip = text
+        view.setAccessibilityElement(false)
+        return view
+    }
+
+    func updateNSView(_ view: ToolTipView, context: Context) {
+        // Re-registering unchanged help can interrupt a pending hover delay.
+        if view.toolTip != text {
+            view.toolTip = text
+        }
+    }
+
+    final class ToolTipView: NSView {
+        // Keep mouse clicks and keyboard focus with the existing SwiftUI button.
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+        override var acceptsFirstResponder: Bool { false }
+    }
+}
 
 struct LeftPaneView: View {
     @Bindable var vm: ExtractionViewModel
@@ -127,22 +161,30 @@ struct LeftPaneView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 12) {
+        ViewThatFits(in: .horizontal) {
+            footerRow(compact: false)
+            footerRow(compact: true)
+        }
+    }
+
+    private func footerRow(compact: Bool) -> some View {
+        HStack(spacing: compact ? 8 : 12) {
             Button {
                 vm.clear()
             } label: {
-                Label("Unload", systemImage: "xmark.circle.fill")
-                    .labelStyle(.titleAndIcon)
+                footerLabel("Unload", systemImage: "xmark.circle.fill", compact: compact)
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.secondaryText)
             }
             .buttonStyle(.plain)
-            .help("Remove this video from the app. The source file is not deleted.")
+            .fixedSize()
+            .footerHelp("Remove this video from the app. The source file is not deleted.")
 
             TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
                 Text(currentTimeString)
                     .font(.system(size: 13, weight: .thin).monospacedDigit())
                     .foregroundStyle(Theme.primaryText)
+                    .fixedSize()
             }
 
             Spacer()
@@ -150,23 +192,43 @@ struct LeftPaneView: View {
             Button {
                 vm.copyCurrentFrameToClipboard()
             } label: {
-                Label("Copy", systemImage: "doc.on.doc")
-                    .labelStyle(.titleAndIcon)
+                footerLabel("Copy", systemImage: "doc.on.doc", compact: compact)
             }
             .buttonStyle(FCPButtonStyle())
+            .fixedSize()
             .keyboardShortcut("c", modifiers: .command)
-            .help("Copy the current frame to the clipboard (⌘C)")
+            .footerHelp("Copy the current frame to the clipboard (Command-C)")
 
-            Button("Capture this frame") {
+            Button {
                 vm.captureCurrentFrame()
+            } label: {
+                if compact {
+                    Image(systemName: "camera")
+                } else {
+                    Text("Capture this frame")
+                }
             }
             .buttonStyle(FCPButtonStyle())
-            .help("Add the current frame to the export queue (press Q with the strip focused)")
+            .fixedSize()
+            .accessibilityLabel("Capture this frame")
+            .footerHelp("Add the current frame to the export queue (press Q with the strip focused)")
 
             Text("\(vm.capturedCount) captured")
                 .font(.caption)
                 .foregroundStyle(Theme.secondaryText)
+                .fixedSize()
                 .frame(minWidth: 80, alignment: .trailing)
+        }
+    }
+
+    @ViewBuilder
+    private func footerLabel(_ title: String, systemImage: String, compact: Bool) -> some View {
+        if compact {
+            Image(systemName: systemImage)
+                .accessibilityLabel(title)
+        } else {
+            Label(title, systemImage: systemImage)
+                .labelStyle(.titleAndIcon)
         }
     }
 
