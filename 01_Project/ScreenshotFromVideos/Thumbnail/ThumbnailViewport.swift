@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 /// Raw viewport geometry, independent of zoom and the loaded video. Keeping
 /// these inputs lets the view recompute demand even when scrolling is idle.
@@ -16,12 +17,44 @@ struct ThumbnailViewport: Equatable {
         let timeRange: ClosedRange<Double>
     }
 
+    /// Include partially clipped cells and every visible neighbor; prefetch padding
+    /// and request limits remain the model's responsibility.
+    func measuredProjection(cellBounds: [Int: CGRect], columns: Int, density: Double,
+                            duration: Double, count: Int) -> Projection? {
+        guard size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0,
+              columns > 0, density.isFinite, density > 0,
+              duration.isFinite, duration > 0, count > 0 else { return nil }
+        // Bounds are resolved in the scroll viewport's coordinates. Lazy-grid
+        // content offsets can include estimated row heights, so they cannot
+        // establish which indices are actually on screen after deep zooms.
+        let viewport = CGRect(origin: .zero, size: size)
+        let visible = cellBounds.filter { index, bounds in
+            guard index >= 0, index < count,
+                  bounds.origin.x.isFinite, bounds.origin.y.isFinite,
+                  bounds.width.isFinite, bounds.height.isFinite,
+                  bounds.width > 0, bounds.height > 0 else { return false }
+            let intersection = viewport.intersection(bounds)
+            return !intersection.isNull && intersection.width > 0 && intersection.height > 0
+        }
+        guard let first = visible.keys.min(), let last = visible.keys.max() else { return nil }
+        let fullRows = visible.filter { viewport.contains($0.value) }.keys.map { $0 / columns }
+        let firstFull = fullRows.min() ?? first / columns
+        let lastFull = fullRows.max() ?? firstFull
+        let lower = min(duration, Double(first) / density)
+        let upper = max(lower, min(duration, Double(last + 1) / density))
+        return Projection(columns: columns, fullyVisibleRows: firstFull...lastFull,
+                          timeRange: lower...upper)
+    }
+
     func project(cellWidth: CGFloat, density: Double, duration: Double, count: Int) -> Projection? {
         guard size.width.isFinite, size.height.isFinite, offsetY.isFinite,
               size.width > 0, size.height > 0, cellWidth.isFinite, cellWidth > 0,
               density.isFinite, density > 0, duration.isFinite, duration > 0,
               count > 0 else { return nil }
-        // Match LazyVGrid's 8-point horizontal / 4-point vertical padding,
+        // This count drives the grid's explicit fixed columns as well as
+        // navigation and decode demand. Do not independently use adaptive
+        // packing in the view: its count can differ at layout boundaries.
+        // Account for 8-point horizontal / 4-point vertical padding,
         // fixed 16:9 cells and one-point spacing.
         let columns = max(1, Int((size.width - 15) / (cellWidth + 1)))
         let cellHeight = cellWidth * 9 / 16

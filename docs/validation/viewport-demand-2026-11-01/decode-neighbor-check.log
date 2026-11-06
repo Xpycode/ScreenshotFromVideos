@@ -1,0 +1,14 @@
+Requested indices 49100...49111, selected 49106; width 240; tolerance half-gap
+received 1636667 size 480x270
+received 1636700 size 480x270
+received 1636733 size 480x270
+received 1636767 size 480x270
+received 1636800 size 480x270
+received 1636833 size 480x270
+strip frame failed at 1636.865s: Error Domain=AVFoundationErrorDomain Code=-11821 "Cannot Decode" UserInfo={NSLocalizedFailureReason=The media data could not be decoded. It may be damaged., NSLocalizedDescription=Cannot Decode, NSUnderlyingError=0x7c15083390 {Error Domain=NSOSStatusErrorDomain Code=-12911 "(null)"}}
+received 1636900 size 480x270
+received 1636933 size 480x270
+received 1636967 size 480x270
+received 1637000 size 480x270
+received 1637033 size 480x270
+received 11/12; missing [1636865]

@@ -2,6 +2,11 @@
 
 Long-form rationale for architectural and design decisions. PROJECT_STATE.md's "Key Decisions" section is the TL;DR index pointing here.
 
+### Seek coalescing lifecycle (2026-10-29; accepted)
+Repeated exact navigation seeks interrupt decoder work, so the strip now waits for completion and chases only the latest requested target, following Apple QA1820. Zero tolerances are retained to preserve frame/cell correspondence. Relative input uses pending intent while a seek runs, then the player's current time; using only the periodic-observer index would lose rapid input between completion and the next observer callback.
+
+Reset discards queued intent but retains knowledge of outstanding per-player seeks until their callbacks arrive. Clearing the flight flag on reset would permit overlap when a player is reused before an old completion. Player/item identity, lifecycle token and request revision distinguish old callbacks from fresh intent; interrupted seeks do not retry forever without new input. A plain MainActor class held in view State avoids reintroducing observable per-seek invalidation. Tests use an injected completion boundary; real decode/key/scroll timing remains a separate runtime gate. The user passed the finite runtime batch. Task 3.2 trace confirms animated seek scrolling reports isScrolling=true and uses the existing 80 ms debounce; no extra gating added. Probe removed after saving evidence.
+
 Decisions appear in roughly chronological order within each topic so the path of thinking is visible. Older entries that have been superseded are retained with a note rather than deleted.
 
 ---
@@ -381,3 +386,87 @@ These three entries lived only in PROJECT_STATE.md's "Key Decisions" list and we
 ### Manual-pin half-interval window in seconds, not CMTime
 **Origin:** Phase 5 Wave 4.2
 **Decision:** Cell pin renders when `abs(CMTimeGetSeconds($0) - cellTimeSec) < 0.5 / model.density`. CMTime arithmetic via `CMTimeSubtract` + `CMTimeAbsoluteValue` would work, but Double seconds is cleaner since we already work in seconds in `activeIndex`, `thumbnailTimes`, etc. Resolved at the strip level — the cell stays vm-unaware (takes a `manualPinned: Bool`, not the model).
+
+## 9. Resolve the active thumbnail border from actual layout
+**Date:** 2026-10-28
+
+Wave 2 replaces per-cell strokes with one non-interactive overlay. The original plan proposed duplicating adaptive-grid offset arithmetic, which could disagree with SwiftUI’s packing at fractional widths. Keep the existing adaptive layout and publish the selected cell’s bounds through an anchor preference instead. The overlay resolves those bounds inside the scrolling content, preserving alignment without changing cell placement. Navigation still calculates column count, including the final-spacing boundary correction. Visual acceptance at zoom 1/6/12 and two widths remains open; this is an implementation decision, not evidence that the visual gate passed.
+
+### Indexed cell anchors for playback highlight
+**Date:** 2026-10-28
+
+Live testing showed an earlier-cell border while the readout reached the clip end. Index arithmetic was correct; conditional selected-anchor publication from lazy cells was suspected of retaining stale selection. Cells now publish bounds keyed by index independently of playback. The outer overlay selects the current active index, preserving one border and actual layout geometry without making image content depend on playback time. This avoids relying on lazy-cell preference reevaluation for selection. User passed every-frame highlight testing after the change; the exact runtime cause was not instrumented. Remaining multi-width/zoom-layout acceptance stays open.
+
+## 10. One grid-column count inside a parent-constrained viewport
+**Date:** 2026-10-28
+
+**Context:** manual acceptance exposed four rendered columns but five-index vertical navigation at high zoom. The viewport projection also used the estimated count, leaving visible thumbnails outside requested decode ranges. Actual-cell border anchors alone cannot correct navigation/demand disagreement.
+
+**Decision:** render explicit fixed GridItems using the same cellsPerRow as navigation and viewport demand. Retain indexed anchor bounds for the border. Wrap the grid in a GeometryReader and frame its ScrollView to the parent-proposed viewport dimensions.
+
+**Alternatives:** retaining separate adaptive packing preserves the mismatch; inferring columns from lazy visible anchors adds another asynchronous geometry feedback path. A first explicit-column implementation without a viewport boundary caused the old column count times the new cell width to enlarge the pane during zoom. That version was corrected before acceptance.
+
+**Consequences:** layout, vertical navigation and thumbnail demand share one count, while content cannot enlarge its own viewport and displace the sidebar/transport. This supersedes section9's instruction to retain adaptive packing, but preserves its actual-anchor border decision. User reports navigation/rendering working and subsequent screenshots show a contained interface. Full prescribed zoom/width matrix and performance remain open. See grid validation evidence and current session handoff.
+
+
+## 11. Isolate playback state and preserve thumbnail refresh identity
+**Date:** 2026-10-29 (Waves 2–4)
+
+**Context:** storing the 30 Hz playhead time in the outer strip invalidated its grid on every tick. Merely reading that state in fewer places would still invalidate the owning view. Closure properties also defeated automatic cell comparison.
+
+**Decision:** keep raw transport time and playback observation in the leaf transport view; the outer strip observes derived selection/follow targets only. Compare thumbnail cells explicitly using time, width, display size, cache identity/version, pin state and player/capture-owner identity, excluding closures. Keep cacheVersion in equality so a skipped body cannot strand a newly cached image; include owner identities so retained handlers cannot target an obsolete player or capture owner.
+
+**Alternatives and rationale:** reducing reads of outer @State does not change its invalidation scope. Comparing closures prevents useful skipping; ignoring refresh/owner identities risks stale images/actions. The leaf split and explicit identities preserve behavior while limiting hot updates.
+
+**Evidence and consequences:** retained Wave 2 SwiftUI traces show 30/s transport body-accessor events and zero named outer strip/cell events in the stable playback window; paused trace has zero named custom-view updates. Late-attach and framework-view limitations remain in the evidence README. Final manual/CPU verification is tracked separately; profiling is not a substitute for it. Section 8's fresh-per-batch generator decision remains in force: its batch-ID reuse guard was disproven, not implemented successfully. The throttle limits streaming refresh rate to about ten per second, not a fixed ten per batch (historical measured fill: 17–18).
+
+## 12. Chase the latest exact seek and reuse measured scroll debounce
+**Date:** 2026-10-29 (Wave 3)
+
+**Context:** repeated navigation could stack expensive frame-exact seeks. Loosening navigation tolerance could make the selected cell disagree with the landed frame. A suspected animated-scroll debounce bypass had not been measured.
+
+**Decision:** keep zero-tolerance navigation seeks and route click, relative navigation and jumps through a MainActor coalescer. Permit one outstanding seek per player, retain only latest intent, and use pending intent for repeated relative input. Reset intent on lifecycle changes while preserving flight barriers until callbacks finish; reject stale item/lifetime callbacks. Do not add another scroll debounce.
+
+**Alternatives and rationale:** fire-and-forget retains the queueing problem; loose tolerance weakens frame selection; clearing barriers during reset permits overlapping flights. Additional debounce would duplicate existing behavior: all 31 measured animating phases reported scrolling=true and all 293 scrolling schedules were debounced.
+
+**Evidence and consequences:** deterministic strict-concurrency tests, independent fresh-context review, user-passed held-arrow/click/jump/capture/reload checks and saved runtime scroll trace support Wave 3 acceptance. Temporary instrumentation was removed; final strict build and exact-path launch were verified. The scroll trace establishes phase/gating, not actual AVPlayer seek flight counts or CPU. Broader final-artifact checks remain Wave 4 work.
+
+## 13. Derive thumbnail demand from measured visible cells
+**Date:** 2026-11-01 (Wave 4 fix; runtime accepted November 1)
+
+**Context:** the focused paused-zoom trace showed final decode demand about ten seconds before the selected/rendered cells. Earlier frames decoded and refreshed correctly, but the selected key was never stored. Dividing a deep lazy-grid offset by nominal row height did not reliably describe the displayed indices; the exact framework cause remains unproven.
+
+**Decision:** resolve existing indexed cell bounds at the scroll viewport, include all positive-area intersections in demand, and derive playback-follow rows from the same measurements. Keep analytical projection only for column packing. Carry layout/model identity with measurements and avoid rescheduling unchanged demand.
+
+**Alternatives and rationale:** more cache invalidations cannot supply unrequested images. Always requesting the selected key would conceal its symptom while leaving visible neighbors starved. Correcting offset arithmetic alone assumes a uniform layout origin that the captured trace does not establish.
+
+**Consequences:** preserves rendering/debounce/cache/seek policies and reuses existing anchors. Headless regression checks and strict build pass; independent review found no concrete issues. The finite paused-fill, scroll/zoom/resize and maximum-zoom follow retests were user-passed November 1; see `validation/viewport-demand-2026-11-01/README.md`. No performance improvement is inferred.
+
+
+## 14. Retry missing thumbnail decodes once with a fresh generator
+**Date:** 2026-11-01 (runtime accepted November 1)
+
+**Context:** after the measured-demand fix, a neighboring cell was still black. The production renderer independently failed exactly that frame in a 12-frame local-clip fixture (AVFoundation -11821 / OSStatus -12911). A fresh-generator request recovered the missing frame. Previously a failed request was left missing until another viewport event scheduled work.
+
+**Decision:** allow two sequential passes maximum; each owns a fresh generator and its cancellation handler. Retry only failed/unreturned requested times, preserving size and tolerances. Stop on cancellation. Keep successful outputs keyed to requested time.
+
+**Alternatives:** repeated viewport-driven retries require user interaction; unlimited retries risk continuous work for genuinely undecodable media. Generator reuse retains the disproven cancellation hazard. Changing tolerances risks frame identity and is unnecessary for the reproduced failure.
+
+**Consequences:** at most one extra attempt per requested frame; genuine failures may remain after both attempts. Policy/cancellation tests, independent review, real fixture12/12 and strict build pass. Runtime paused-fill/follow and the remaining manual matrix were user-passed November 1. No broad claim that decoder failures explain every observed placeholder.
+
+
+## 15. Preserve progressive thumbnail publication instead of a total batch cap
+**Date:** 2026-11-02 (explicit user decision)
+
+**Context:** the acceptance text required roughly ten grid refreshes per 256-image batch, while task 1.2/design decision 4 described a 100 ms streaming throttle. Historical measurement recorded 17–18 cache-version increments. These statements are not equivalent.
+
+**Decision:** the user chose “Keep progressive fill; explicitly revise the criterion.” Keep production code unchanged. Within each batch, publish its first stored image immediately, subsequent streaming increments at least 100 ms apart, and one final increment on completion or cancellation only when stored images remain unpublished. Batches storing no images publish nothing.
+
+**Alternatives and consequences:** a ten-total budget can delay visibility during slow fills; changing it would require new source and runtime acceptance. The chosen policy preserves accepted progressive behavior. Each replacement batch starts its own clock; final flushes bypass the streaming interval. Therefore this is neither a global ten-per-second ceiling nor a ten-total limit. Cache-version increments are publication signals, not measured SwiftUI body counts. Original historical evidence remains unchanged; independent source review supports the revised contract, with no fresh runtime count claimed. See [closeout evidence](validation/performance-closeout-2026-11-02/README.md).
+
+
+### Performance pass closeout — November 6, 2026
+
+Decisions 11–15 are the retained implementation contract: leaf-owned raw player time, cache-version-aware cell equality, latest-intent single-flight seeking, measured visible demand, bounded fresh-generator retry and the explicitly revised progressive-refresh policy. Decision 8 continues to reject shared-generator reuse; a batch-ID guard was tried and reverted, not a successful optimization.
+
+The [archived plan](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) closes 14 tasks with one reverted experiment. Independent read-only closeout review found no concrete source defect. Default playback isolation is supported by retained named-body trace evidence; shuttle uses the same source-reviewed observation path but was not directly profiled. Current-source strict build and prior manual acceptance are retained. CPU results are historical/unpaired comparisons, and zoom cue timing/cache state do not establish a cold-decode performance win. See the [evidence archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_EVIDENCE.md).

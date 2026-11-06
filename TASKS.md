@@ -1,0 +1,20 @@
+# Tasks
+
+## Active plan
+None. [Strip/player performance completed](docs/sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) November 6: 14 tasks complete, one reverted; evidence limitations retained.
+
+## Standalone follow-up
+- Minimum-width footer defect (2026-10-29): compact actions implemented; narrow layout user-passed. Wide-label return and tooltip/action checks remain unreported. Source changes preserved separately from the performance checkpoint. See [evidence](docs/validation/window-width-2026-10-29/README.md). Finish these finite checks before treating the footer change as accepted.
+
+## Backlog
+- App filename/display-name mismatch (2026-11-01): user asked why `ScreenshotFromVideos.app` differs from Dock/menu name “Stills From Video”. `project.yml` keeps `PRODUCT_NAME: ScreenshotFromVideos` while CFBundleName/CFBundleDisplayName are “Stills From Video”. Consider aligning the bundle filename and updating build/release/handoff paths; keep internal identifiers stable. Deferred while resolving thumbnail fill.
+- Thumbnail drag scrubbing (2026-10-29): holding the mouse button and dragging across thumbnails leaves the original selected frame active. User clarification confirms the symptom; source currently supports click-to-seek only (`ThumbnailCellView.onTapGesture`), with no drag-selection handler. Add continuous selection/seek while dragging as a future interaction improvement; preserve plain-click and Command-click capture. Not implemented or runtime-reproduced by agent.
+- Install user-selected app icon v3 (three orange screenshots, smaller filmstrip): `02_Design/Icon-2026-10-28/stills-from-video-candidate-v3-1024.png`. Regenerate required app-icon sizes and verify in a fresh build when returning to icon integration. Design accepted 2026-10-28; current app assets unchanged. Performance acceptance is complete; integration remains a future task.
+
+- Video information status bar: show useful loaded-video metadata (duration, resolution, frame rate, codec); user suggested 2026-10-28. Address after thumbnail slowness; placement/content need design review.
+
+- At every-frame zoom, playback can reach uncached thumbnails and show black cells. User accepted this as a deferred limitation on 2026-10-28; eventual fill after pausing was not explicitly confirmed in that final check. The separately promoted paused slider-zoom failure (2026-10-29) was fixed by measured demand plus bounded decode retry and user-passed on 2026-11-01 (task 4.1). Retain this older playback catch-up limitation separately; do not reopen the accepted paused-fill case.
+- Continuous zoom density produces mostly distinct timestamp cache keys; consider a reusable sampling ladder only if further performance work is requested.
+
+## Inbox
+- Existing zoom-out redraw slowness: distinguish cache eviction from never-cached frames (see archived performance plan’s July 19 evidence).

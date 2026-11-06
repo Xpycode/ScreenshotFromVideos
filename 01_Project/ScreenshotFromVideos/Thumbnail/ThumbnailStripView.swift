@@ -12,6 +12,7 @@ import SwiftUI
 import AVFoundation
 import CoreMedia
 import AppKit
+import Combine
 
 struct ThumbnailStripView: View {
     let model: StripModel
@@ -19,9 +20,11 @@ struct ThumbnailStripView: View {
     let vm: ExtractionViewModel
 
     @State private var activeIndex: Int = -1
+    @State private var seekCoalescer = SeekCoalescer()
     @State private var visibleRows: ClosedRange<Int> = 0...0
     @State private var scrollViewport = ThumbnailViewport(size: .zero, offsetY: 0)
     @State private var viewportSize: CGSize = .zero
+    @State private var measuredModelID: ObjectIdentifier?
     @State private var followScrollWork: Task<Void, Never>?
     @State private var playbackScrollTarget: Int?
     // Drives keyboard focus for the grid. The +/-/0/m/arrow handlers only fire
@@ -100,21 +103,26 @@ struct ThumbnailStripView: View {
     /// recenters the strip on the landing spot (debounced).
     private func jump(by seconds: Double) {
         guard let player else { return }
-        let cur = CMTimeGetSeconds(player.currentTime())
+        let cur = CMTimeGetSeconds(seekCoalescer.pendingTarget(on: player) ?? player.currentTime())
         let target = max(0, min(model.duration, cur + seconds))
-        player.seek(
-            to: CMTime(seconds: target, preferredTimescale: 600),
-            toleranceBefore: .zero,
-            toleranceAfter: .zero
-        )
+        seekCoalescer.request(CMTime(seconds: target, preferredTimescale: 600), on: player)
         stripFocused = true
     }
 
     private var grid: some View {
+        // Fixed columns must not contribute their combined minimum width to
+        // the split view. In particular, zoom first grows the cells while the
+        // previous column count is still in state. Take the pane's proposed
+        // size before laying out that content, so it cannot enlarge its own
+        // viewport and push the transport/sidebar outside the window.
+        GeometryReader { viewport in
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: true) {
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: cellW, maximum: cellW), spacing: 1)],
+                    // Use the same column count as navigation and viewport demand.
+                    // Adaptive packing can choose a different count, making arrows
+                    // drift diagonally and decoding rows outside the visible grid.
+                    columns: Array(repeating: GridItem(.fixed(cellW), spacing: 1), count: cellsPerRow),
                     spacing: 1
                 ) {
                     let allTimes = times
@@ -129,11 +137,7 @@ struct ThumbnailStripView: View {
                             playerIdentity: playerIdentity,
                             captureOwnerIdentity: ObjectIdentifier(vm),
                             onTap: { tappedTime in
-                                player?.seek(
-                                    to: tappedTime,
-                                    toleranceBefore: .zero,
-                                    toleranceAfter: .zero
-                                )
+                                if let player { seekCoalescer.request(tappedTime, on: player) }
                                 stripFocused = true
                             },
                             onCmdTap: { tappedTime in
@@ -145,16 +149,16 @@ struct ThumbnailStripView: View {
                         .frame(width: cellW, height: cellH)
                         .id(idx)
                         .anchorPreference(key: ActiveCellBoundsKey.self, value: .bounds) {
-                            idx == activeIndex ? $0 : nil
+                            [idx: $0]
                         }
                     }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .overlayPreferenceValue(ActiveCellBoundsKey.self) { anchor in
+                .overlayPreferenceValue(ActiveCellBoundsKey.self) { anchors in
                     GeometryReader { geometry in
-                        if let anchor {
+                        if let anchor = anchors[activeIndex] {
                             let bounds = geometry[anchor]
                             Rectangle()
                                 .strokeBorder(Theme.accent, lineWidth: 2)
@@ -163,6 +167,34 @@ struct ThumbnailStripView: View {
                         }
                     }
                     .allowsHitTesting(false)
+                }
+            }
+            // Resolve anchors at the viewport, not the tall lazy-grid content.
+            // Publishing only the reduced projection avoids a state update for
+            // every pixel of scrolling while the visible indices stay the same.
+            .overlayPreferenceValue(ActiveCellBoundsKey.self) { anchors in
+                GeometryReader { geometry in
+                    let projection = ThumbnailViewport(size: geometry.size, offsetY: 0)
+                        .measuredProjection(cellBounds: anchors.mapValues { geometry[$0] },
+                                            columns: cellsPerRow, density: model.density,
+                                            duration: model.duration, count: model.thumbnailCount)
+                    Color.clear.preference(key: MeasuredViewportKey.self,
+                                           value: MeasuredViewport(modelID: ObjectIdentifier(model),
+                                                                   density: model.density,
+                                                                   cellWidth: cellW,
+                                                                   projection: projection))
+                }
+                .allowsHitTesting(false)
+            }
+            .onPreferenceChange(MeasuredViewportKey.self) { measurement in
+                guard let measurement, measurement.modelID == ObjectIdentifier(model),
+                      measurement.density == model.density, measurement.cellWidth == cellW,
+                      let projection = measurement.projection,
+                      projection.columns == cellsPerRow else { return }
+                visibleRows = projection.fullyVisibleRows
+                if measuredModelID != measurement.modelID || model.visibleTimeRange != projection.timeRange {
+                    measuredModelID = measurement.modelID
+                    model.onVisibleRangeChange(projection.timeRange)
                 }
             }
             .onChange(of: seekScrollTarget) { _, target in
@@ -178,7 +210,7 @@ struct ThumbnailStripView: View {
                 proxy.scrollTo(target, anchor: .center)
                 playbackScrollTarget = nil
             }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(width: viewport.size.width, height: viewport.size.height)
         .background(Theme.secondaryBackground)
         .focusable()
         .focused($stripFocused)
@@ -239,6 +271,20 @@ struct ThumbnailStripView: View {
             navigate(by: cellsPerRow)
             return .handled
         }
+        .onKeyPress(keys: [.home, .end, .pageUp, .pageDown]) { press in
+            guard !press.modifiers.contains(.command),
+                  !press.modifiers.contains(.option),
+                  !press.modifiers.contains(.control),
+                  !press.modifiers.contains(.shift) else { return .ignored }
+            switch press.key {
+            case .home: navigate(to: 0)
+            case .end: navigate(to: model.thumbnailCount - 1)
+            case .pageUp: navigate(by: -pageStride)
+            case .pageDown: navigate(by: pageStride)
+            default: return .ignored
+            }
+            return .handled
+        }
         // J/K/L shuttle transport + Space toggle. Same modifier guard as the
         // zoom/capture keys so they only fire on the bare key while the strip
         // holds focus (letters allow Shift for their capitalized variants).
@@ -288,11 +334,13 @@ struct ThumbnailStripView: View {
             refreshViewport(scrollViewport)
         }
         .onChange(of: ObjectIdentifier(model), initial: true) { _, _ in
-            refreshViewport(scrollViewport, forceRender: true)
+            refreshViewport(scrollViewport)
         }
         .onScrollPhaseChange { _, new in
             model.onScrollPhaseChange(isScrolling: new.isScrolling)
         }
+        .onChange(of: playerIdentity) { _, _ in seekCoalescer.reset() }
+        .onDisappear { seekCoalescer.reset() }
         .task(id: playerIdentity) {
             await observePlayerTime()
         }
@@ -308,6 +356,7 @@ struct ThumbnailStripView: View {
         }
         .task {
             await monitorCmdScrollWheel()
+        }
         }
         }
     }
@@ -394,19 +443,38 @@ struct ThumbnailStripView: View {
 
     // Arrow-key navigation: step the active cell by `offset` (±1 for ←/→,
     // ±cellsPerRow for ↑/↓), seek the player to that cell's time, and bring it
-    // into view. Anchors off the current active cell so it tracks player state.
+    // into view. Pending input is the anchor during a seek, so held keys advance
+    // even before the player's periodic observer reports the landing time.
     private func navigate(by offset: Int) {
+        guard offset != 0 else { return }
+        let current: Int
+        if let player {
+            let time = seekCoalescer.pendingTarget(on: player) ?? player.currentTime()
+            let seconds = CMTimeGetSeconds(time)
+            current = seconds.isFinite
+                ? Int((max(0, min(model.duration, seconds)) * model.density).rounded())
+                : max(0, activeIndex)
+        } else {
+            current = max(0, activeIndex)
+        }
+        navigate(to: current + offset)
+    }
+
+    private var pageStride: Int {
+        let rows = max(1, Int(viewportSize.height / (cellH + 1)))
+        return rows * cellsPerRow
+    }
+
+    private func navigate(to index: Int) {
         let allTimes = times
         let count = allTimes.count
-        guard count > 0, offset != 0 else { return }
-        let cur = max(0, activeIndex)
-        let target = max(0, min(count - 1, cur + offset))
-        guard target != cur else { return }
-        player?.seek(to: allTimes[target], toleranceBefore: .zero, toleranceAfter: .zero)
+        guard count > 0 else { return }
+        let target = max(0, min(count - 1, index))
+        if let player { seekCoalescer.request(allTimes[target], on: player) }
         seekScrollTarget = target
     }
 
-    private func refreshViewport(_ raw: ThumbnailViewport, forceRender: Bool = false) {
+    private func refreshViewport(_ raw: ThumbnailViewport) {
         // The view's own size is authoritative once layout has measured it;
         // scroll callbacks can still contain transient container dimensions.
         let viewport = ThumbnailViewport(
@@ -418,10 +486,8 @@ struct ThumbnailStripView: View {
             duration: model.duration, count: model.thumbnailCount
         ) else { return }
         cellsPerRow = projection.columns
-        visibleRows = projection.fullyVisibleRows
-        if forceRender || model.visibleTimeRange != projection.timeRange {
-            model.onVisibleRangeChange(projection.timeRange)
-        }
+        // Demand and following use actual cell bounds. Never let a later raw
+        // offset callback overwrite them with a lazy-grid height estimate.
     }
 
     private func updateActiveIndex(at time: CMTime) {
@@ -503,13 +569,29 @@ private final class TimeObservationLifetime {
     var isActive = true
 }
 
-/// Resolve the selected cell's actual bounds, preserving adaptive-grid packing
-/// and alignment at fractional widths without duplicating SwiftUI layout math.
-private struct ActiveCellBoundsKey: PreferenceKey {
-    static let defaultValue: Anchor<CGRect>? = nil
+/// Identify the layout that produced a reduced measurement so a pending
+/// preference update cannot apply demand to a replacement model or zoom.
+private struct MeasuredViewport: Equatable {
+    let modelID: ObjectIdentifier
+    let density: Double
+    let cellWidth: CGFloat
+    let projection: ThumbnailViewport.Projection?
+}
 
-    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+private struct MeasuredViewportKey: PreferenceKey {
+    static let defaultValue: MeasuredViewport? = nil
+
+    static func reduce(value: inout MeasuredViewport?, nextValue: () -> MeasuredViewport?) {
         if let next = nextValue() { value = next }
+    }
+}
+
+/// Stable indexed bounds serve both the selection outline and visible demand.
+private struct ActiveCellBoundsKey: PreferenceKey {
+    static let defaultValue: [Int: Anchor<CGRect>] = [:]
+
+    static func reduce(value: inout [Int: Anchor<CGRect>], nextValue: () -> [Int: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, latest in latest })
     }
 }
 
@@ -571,7 +653,9 @@ private struct StripTransportBar: View {
         .padding(.vertical, 6)
         .background(Theme.secondaryBackground)
         .task(id: playerIdentity) { await observePlayerTime() }
-        .task(id: playerIdentity) { await observePlaybackStatus() }
+        .onReceive(playbackStatusPublisher) { status in
+            isPlaying = status == .playing
+        }
     }
 
     private var timecodeString: String {
@@ -624,14 +708,13 @@ private struct StripTransportBar: View {
         catch { /* Cancellation removes the observer. */ }
     }
 
-    // Mirror AVPlayer's play/pause state into `isPlaying` via KVO so the
-    // transport icon is correct even when playback ends on its own (the
-    // periodic time observer stops firing once the timebase halts).
-    private func observePlaybackStatus() async {
-        guard let player else { isPlaying = false; return }
-        isPlaying = player.timeControlStatus == .playing
-        for await status in player.publisher(for: \.timeControlStatus).values {
-            isPlaying = status == .playing
-        }
+    // Keep status delivery attached to the view, without an AsyncPublisher
+    // demand gap between updates. KVO supplies the initial value and also
+    // updates the icon when playback ends and periodic time callbacks stop.
+    private var playbackStatusPublisher: AnyPublisher<AVPlayer.TimeControlStatus, Never> {
+        guard let player else { return Just(.paused).eraseToAnyPublisher() }
+        return player.publisher(for: \.timeControlStatus, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
     }
 }

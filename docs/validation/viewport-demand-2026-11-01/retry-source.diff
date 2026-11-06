@@ -1,0 +1,92 @@
+--- before/ThumbnailRenderer.swift
++++ after/ThumbnailRenderer.swift
+@@ -17,6 +17,11 @@
+         let raw: AVAssetImageGenerator
+     }
+ 
++    // AVAsset is read-only here and shared only to construct independent decoders.
++    private struct RenderAsset: @unchecked Sendable {
++        let raw: AVAsset
++    }
++
+     private let asset: AVAsset
+ 
+     init(asset: AVAsset) {
+@@ -28,38 +33,52 @@
+         targetWidth: Int,
+         tolerance: CMTime
+     ) -> AsyncStream<(CMTime, CGImage)> {
+-        let generator = AVAssetImageGenerator(asset: asset)
+-        generator.appliesPreferredTrackTransform = true
+-        // 2× targetWidth for Retina; height 0 lets AVF preserve aspect ratio.
+-        generator.maximumSize = CGSize(width: CGFloat(targetWidth) * 2, height: 0)
+-        generator.requestedTimeToleranceBefore = tolerance
+-        generator.requestedTimeToleranceAfter = tolerance
+-
+-        let box = CancellableGenerator(raw: generator)
+-
++        let source = RenderAsset(raw: asset)
+         return AsyncStream { continuation in
+             let task = Task {
+-                // `cancelAllCGImageGeneration` drops in-flight decodes immediately;
+-                // without it, `images(for:)` keeps churning past `task.cancel()`,
+-                // and stacked-up tasks during fast pinch saturate VTDecoderXPCService.
+-                await withTaskCancellationHandler {
+-                    do {
+-                        for try await result in box.raw.images(for: times) {
++                var pending = times
++                // One fresh-generator retry can recover an isolated decoder failure.
++                // Each pass owns its cancellation handler; a cancelled old pass can
++                // never cancel a newer generator.
++                for _ in 0..<2 {
++                    guard !Task.isCancelled, !pending.isEmpty else { break }
++                    let generator = AVAssetImageGenerator(asset: source.raw)
++                    generator.appliesPreferredTrackTransform = true
++                    // 2× targetWidth for Retina; height 0 preserves aspect ratio.
++                    generator.maximumSize = CGSize(width: CGFloat(targetWidth) * 2, height: 0)
++                    generator.requestedTimeToleranceBefore = tolerance
++                    generator.requestedTimeToleranceAfter = tolerance
++                    let box = CancellableGenerator(raw: generator)
++                    let passTimes = pending
++                    var passCancelled = false
++
++                    // Cancel the current decoder promptly when viewport demand ends.
++                    await withTaskCancellationHandler {
++                        do {
+                             try Task.checkCancellation()
+-                            switch result {
+-                            case .success(requestedTime: let requested, image: let image, actualTime: _):
+-                                continuation.yield((requested, image))
+-                            case .failure(requestedTime: let requested, error: let error):
+-                                print("strip frame failed at \(CMTimeGetSeconds(requested))s: \(error)")
++                            for try await result in box.raw.images(for: passTimes) {
++                                try Task.checkCancellation()
++                                switch result {
++                                case .success(requestedTime: let requested, image: let image, actualTime: _):
++                                    pending.removeAll { CMTimeCompare($0, requested) == 0 }
++                                    continuation.yield((requested, image))
++                                case .failure(requestedTime: let requested, error: let error):
++                                    if error is CancellationError || (error as? AVError)?.code == .operationCancelled {
++                                        passCancelled = true
++                                    }
++                                    print("strip frame failed at \(CMTimeGetSeconds(requested))s: \(error)")
++                                }
+                             }
++                        } catch {
++                            passCancelled = passCancelled || error is CancellationError
++                                || (error as? AVError)?.code == .operationCancelled
+                         }
+-                    } catch {
+-                        // Cancellation or upstream failure — close the stream.
++                    } onCancel: {
++                        box.raw.cancelAllCGImageGeneration()
+                     }
+-                    continuation.finish()
+-                } onCancel: {
+-                    box.raw.cancelAllCGImageGeneration()
++                    if passCancelled || Task.isCancelled { break }
+                 }
++                continuation.finish()
+             }
+             continuation.onTermination = { _ in task.cancel() }
+         }

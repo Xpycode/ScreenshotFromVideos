@@ -146,9 +146,10 @@ struct RightPaneView: View {
                 VStack(spacing: 2) {
                     ForEach(Array(vm.manualTimes.enumerated()), id: \.offset) { index, time in
                         HStack {
-                            Text(TimestampFormatter.string(from: time))
+                            Text(TimestampFormatter.timecode(from: time, fps: vm.metadata?.nominalFrameRate ?? 30))
                                 .font(.system(size: 12).monospacedDigit())
                                 .foregroundStyle(Theme.primaryText)
+                                .help("Captured position (hours:minutes:seconds:frames)")
                             Spacer()
                             Button {
                                 vm.removeManualTime(at: index)

@@ -171,8 +171,8 @@ struct LeftPaneView: View {
     }
 
     private var currentTimeString: String {
-        guard let player = vm.player else { return "00:00.000" }
-        return TimestampFormatter.string(from: player.currentTime())
+        guard let player = vm.player else { return "00:00:00:00" }
+        return TimestampFormatter.timecode(from: player.currentTime(), fps: vm.metadata?.nominalFrameRate ?? 30)
     }
 
     // MARK: - Burn-in preview

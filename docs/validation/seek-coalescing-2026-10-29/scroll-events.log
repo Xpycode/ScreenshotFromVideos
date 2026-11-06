@@ -1,0 +1,542 @@
+986783.2229340418 phase idle scrolling=false
+986783.2234569167 schedule scrolling=false magnifying=false debounce=false
+986783.2235346667 schedule scrolling=false magnifying=false debounce=false
+986783.2235674583 schedule scrolling=false magnifying=false debounce=false
+986783.22371575 schedule scrolling=false magnifying=false debounce=false
+986783.2450370417 schedule scrolling=false magnifying=false debounce=false
+986783.3303858334 render-ready scrolling=false
+986783.3765097917 schedule scrolling=false magnifying=false debounce=false
+986783.4397886667 render-ready scrolling=false
+986801.1044921668 navigate index=2
+986801.6094751668 navigate index=3
+986801.6750228751 navigate index=4
+986801.766598875 navigate index=5
+986801.8499680001 navigate index=6
+986801.9415692501 navigate index=7
+986802.0166967917 navigate index=8
+986802.0999464584 navigate index=9
+986802.1832547918 navigate index=10
+986802.2665800834 navigate index=11
+986802.3415638334 navigate index=12
+986802.4334092084 navigate index=13
+986802.5165653334 navigate index=14
+986802.6082955 navigate index=15
+986802.6832066667 navigate index=16
+986802.7666358751 navigate index=17
+986802.8499947501 navigate index=18
+986802.9248921667 navigate index=19
+986803.0166845 navigate index=20
+986803.09992525 navigate index=21
+986803.18324275 navigate index=22
+986803.2666458751 navigate index=23
+986803.35834825 navigate index=24
+986803.4332725 navigate index=25
+986803.5166400834 navigate index=26
+986803.5999622501 navigate index=27
+986803.6749219584 navigate index=28
+986803.7582693751 navigate index=29
+986803.8416066667 navigate index=30
+986803.8594985 phase animating scrolling=true
+986803.8595607084 schedule scrolling=true magnifying=false debounce=true
+986803.9412272917 navigate index=31
+986803.9624894584 render-ready scrolling=true
+986804.0161632918 navigate index=32
+986804.0235168334 phase idle scrolling=false
+986804.0235880833 schedule scrolling=false magnifying=false debounce=false
+986804.0321025418 phase animating scrolling=true
+986804.0321725834 schedule scrolling=true magnifying=false debounce=true
+986804.0998877501 navigate index=33
+986804.1191575418 render-ready scrolling=true
+986804.1915837501 navigate index=34
+986804.2665833334 navigate index=35
+986804.3498844167 navigate index=36
+986804.4416259167 navigate index=37
+986804.5081942917 navigate index=38
+986804.60847225 navigate index=39
+986804.6748485417 navigate index=40
+986804.7588097501 schedule scrolling=true magnifying=false debounce=true
+986804.7745615417 navigate index=41
+986804.8089926668 schedule scrolling=true magnifying=false debounce=true
+986804.8525641668 phase idle scrolling=false
+986804.8526332501 schedule scrolling=false magnifying=false debounce=false
+986804.8530037084 render-ready scrolling=false
+986804.8579088334 navigate index=42
+986804.8703068334 phase animating scrolling=true
+986804.8703757917 schedule scrolling=true magnifying=false debounce=true
+986804.9248627084 navigate index=43
+986804.9538932501 render-ready scrolling=true
+986805.0165750834 navigate index=44
+986805.1083404584 navigate index=45
+986805.1915597917 navigate index=46
+986805.266666 navigate index=47
+986805.3415622917 navigate index=48
+986805.892737125 navigate index=58
+986805.9757304584 schedule scrolling=true magnifying=false debounce=true
+986806.0087543334 schedule scrolling=true magnifying=false debounce=true
+986806.0707675834 phase idle scrolling=false
+986806.0708484584 schedule scrolling=false magnifying=false debounce=false
+986806.0712897084 render-ready scrolling=false
+986806.089914 phase animating scrolling=true
+986806.0899873751 schedule scrolling=true magnifying=false debounce=true
+986806.1758137083 render-ready scrolling=true
+986806.400439625 navigate index=68
+986806.47444725 navigate index=78
+986806.5082619167 schedule scrolling=true magnifying=false debounce=true
+986806.5257675834 schedule scrolling=true magnifying=false debounce=true
+986806.5577768751 navigate index=88
+986806.5928827501 schedule scrolling=true magnifying=false debounce=true
+986806.6090917501 schedule scrolling=true magnifying=false debounce=true
+986806.6424615834 schedule scrolling=true magnifying=false debounce=true
+986806.6494032084 navigate index=98
+986806.692510375 schedule scrolling=true magnifying=false debounce=true
+986806.7327882501 navigate index=108
+986806.740799625 schedule scrolling=true magnifying=false debounce=true
+986806.7408604167 schedule scrolling=true magnifying=false debounce=true
+986806.7501995 schedule scrolling=true magnifying=false debounce=true
+986806.7764190834 schedule scrolling=true magnifying=false debounce=true
+986806.8161820418 navigate index=118
+986806.8270155 schedule scrolling=true magnifying=false debounce=true
+986806.8270845417 schedule scrolling=true magnifying=false debounce=true
+986806.8369499583 schedule scrolling=true magnifying=false debounce=true
+986806.8597431667 schedule scrolling=true magnifying=false debounce=true
+986806.8994257083 navigate index=128
+986806.9431639167 schedule scrolling=true magnifying=false debounce=true
+986806.951108125 schedule scrolling=true magnifying=false debounce=true
+986806.9827103334 navigate index=138
+986807.0206329584 schedule scrolling=true magnifying=false debounce=true
+986807.0341927084 schedule scrolling=true magnifying=false debounce=true
+986807.059309 navigate index=148
+986807.0979423334 schedule scrolling=true magnifying=false debounce=true
+986807.1185760834 schedule scrolling=true magnifying=false debounce=true
+986807.1448413751 navigate index=158
+986807.1864913334 schedule scrolling=true magnifying=false debounce=true
+986807.2093203334 schedule scrolling=true magnifying=false debounce=true
+986807.2328085001 navigate index=168
+986807.2765926667 schedule scrolling=true magnifying=false debounce=true
+986807.284442125 schedule scrolling=true magnifying=false debounce=true
+986807.3161972917 navigate index=178
+986807.3613595834 schedule scrolling=true magnifying=false debounce=true
+986807.376241 schedule scrolling=true magnifying=false debounce=true
+986807.3910810418 navigate index=188
+986807.4281551667 schedule scrolling=true magnifying=false debounce=true
+986807.4427375417 schedule scrolling=true magnifying=false debounce=true
+986807.4829305417 navigate index=198
+986807.4928376668 schedule scrolling=true magnifying=false debounce=true
+986807.4929025001 schedule scrolling=true magnifying=false debounce=true
+986807.5044290001 schedule scrolling=true magnifying=false debounce=true
+986807.52632075 schedule scrolling=true magnifying=false debounce=true
+986807.5660914584 navigate index=208
+986807.6099442084 schedule scrolling=true magnifying=false debounce=true
+986807.6263018334 schedule scrolling=true magnifying=false debounce=true
+986807.6424154168 navigate index=218
+986807.685730875 schedule scrolling=true magnifying=false debounce=true
+986807.7011960418 schedule scrolling=true magnifying=false debounce=true
+986807.7255127918 navigate index=228
+986807.7609544584 schedule scrolling=true magnifying=false debounce=true
+986807.7845038334 schedule scrolling=true magnifying=false debounce=true
+986807.8161943334 navigate index=238
+986807.8254967084 schedule scrolling=true magnifying=false debounce=true
+986807.8255625 schedule scrolling=true magnifying=false debounce=true
+986807.83770425 schedule scrolling=true magnifying=false debounce=true
+986807.859975 schedule scrolling=true magnifying=false debounce=true
+986807.8994811251 navigate index=248
+986807.9443039584 schedule scrolling=true magnifying=false debounce=true
+986807.959591625 schedule scrolling=true magnifying=false debounce=true
+986807.9744564167 navigate index=258
+986808.0262663334 schedule scrolling=true magnifying=false debounce=true
+986808.0342538333 schedule scrolling=true magnifying=false debounce=true
+986808.0660574584 navigate index=268
+986808.076251 schedule scrolling=true magnifying=false debounce=true
+986808.0763087918 schedule scrolling=true magnifying=false debounce=true
+986808.0891325001 schedule scrolling=true magnifying=false debounce=true
+986808.1178725001 schedule scrolling=true magnifying=false debounce=true
+986808.1410965418 navigate index=278
+986808.1870547084 schedule scrolling=true magnifying=false debounce=true
+986808.2012522917 schedule scrolling=true magnifying=false debounce=true
+986808.2327599584 navigate index=288
+986808.2429130417 schedule scrolling=true magnifying=false debounce=true
+986808.2429770834 schedule scrolling=true magnifying=false debounce=true
+986808.255791125 schedule scrolling=true magnifying=false debounce=true
+986808.2927305418 schedule scrolling=true magnifying=false debounce=true
+986808.3077909168 navigate index=298
+986808.3607195001 schedule scrolling=true magnifying=false debounce=true
+986808.3761678333 schedule scrolling=true magnifying=false debounce=true
+986808.4095440417 schedule scrolling=true magnifying=false debounce=true
+986808.4342543334 schedule scrolling=true magnifying=false debounce=true
+986808.5013064584 phase idle scrolling=false
+986808.5013814167 schedule scrolling=false magnifying=false debounce=false
+986808.5018377918 render-ready scrolling=false
+986808.53413225 phase animating scrolling=true
+986808.5342039583 schedule scrolling=true magnifying=false debounce=true
+986808.6177871667 render-ready scrolling=true
+986821.7182815834 schedule scrolling=true magnifying=false debounce=true
+986821.7347699167 schedule scrolling=true magnifying=false debounce=true
+986821.7515317918 schedule scrolling=true magnifying=false debounce=true
+986821.7676108751 schedule scrolling=true magnifying=false debounce=true
+986821.7844131667 schedule scrolling=true magnifying=false debounce=true
+986821.7949056667 schedule scrolling=true magnifying=false debounce=true
+986821.8095519168 schedule scrolling=true magnifying=false debounce=true
+986821.8180478751 schedule scrolling=true magnifying=false debounce=true
+986821.8460948333 phase idle scrolling=false
+986821.8461697918 schedule scrolling=false magnifying=false debounce=false
+986821.8487878334 render-ready scrolling=false
+986823.6208203334 phase animating scrolling=true
+986823.6208895 schedule scrolling=true magnifying=false debounce=true
+986823.6350041251 schedule scrolling=true magnifying=false debounce=true
+986823.6449868334 schedule scrolling=true magnifying=false debounce=true
+986823.655232375 schedule scrolling=true magnifying=false debounce=true
+986823.678741125 schedule scrolling=true magnifying=false debounce=true
+986823.7127675418 schedule scrolling=true magnifying=false debounce=true
+986823.7482400833 schedule scrolling=true magnifying=false debounce=true
+986823.7802280417 schedule scrolling=true magnifying=false debounce=true
+986823.797893375 schedule scrolling=true magnifying=false debounce=true
+986823.7980053751 phase idle scrolling=false
+986823.7980235417 schedule scrolling=false magnifying=false debounce=false
+986823.8045865 render-ready scrolling=false
+986824.3765244584 phase animating scrolling=true
+986824.3765814584 schedule scrolling=true magnifying=false debounce=true
+986824.4089764584 schedule scrolling=true magnifying=false debounce=true
+986824.4251467084 schedule scrolling=true magnifying=false debounce=true
+986824.4373361251 schedule scrolling=true magnifying=false debounce=true
+986824.4452469584 schedule scrolling=true magnifying=false debounce=true
+986824.4539755001 schedule scrolling=true magnifying=false debounce=true
+986824.4706744584 schedule scrolling=true magnifying=false debounce=true
+986824.4789185 schedule scrolling=true magnifying=false debounce=true
+986824.487880375 schedule scrolling=true magnifying=false debounce=true
+986824.504978375 schedule scrolling=true magnifying=false debounce=true
+986824.5174849167 schedule scrolling=true magnifying=false debounce=true
+986824.5361696667 phase idle scrolling=false
+986824.5362450418 schedule scrolling=false magnifying=false debounce=false
+986824.5386046667 render-ready scrolling=false
+986825.8108039584 phase animating scrolling=true
+986825.8108763751 schedule scrolling=true magnifying=false debounce=true
+986825.849399875 schedule scrolling=true magnifying=false debounce=true
+986825.88930875 schedule scrolling=true magnifying=false debounce=true
+986825.9271305834 schedule scrolling=true magnifying=false debounce=true
+986825.9611869167 schedule scrolling=true magnifying=false debounce=true
+986825.9792290417 schedule scrolling=true magnifying=false debounce=true
+986825.9793057917 phase idle scrolling=false
+986825.9793187501 schedule scrolling=false magnifying=false debounce=false
+986825.9829607917 render-ready scrolling=false
+986826.57333875 phase animating scrolling=true
+986826.5734100001 schedule scrolling=true magnifying=false debounce=true
+986826.6410075417 schedule scrolling=true magnifying=false debounce=true
+986826.651592875 schedule scrolling=true magnifying=false debounce=true
+986826.6614033751 schedule scrolling=true magnifying=false debounce=true
+986826.6673385834 schedule scrolling=true magnifying=false debounce=true
+986826.6777182501 schedule scrolling=true magnifying=false debounce=true
+986826.6835886667 schedule scrolling=true magnifying=false debounce=true
+986826.700532375 schedule scrolling=true magnifying=false debounce=true
+986826.7102991667 schedule scrolling=true magnifying=false debounce=true
+986826.7360352917 phase idle scrolling=false
+986826.7361096668 schedule scrolling=false magnifying=false debounce=false
+986826.7365057918 render-ready scrolling=false
+986827.445197 phase animating scrolling=true
+986827.4452837501 schedule scrolling=true magnifying=false debounce=true
+986827.458740875 schedule scrolling=true magnifying=false debounce=true
+986827.4690911251 schedule scrolling=true magnifying=false debounce=true
+986827.4808234167 schedule scrolling=true magnifying=false debounce=true
+986827.4982790834 schedule scrolling=true magnifying=false debounce=true
+986827.5406145834 schedule scrolling=true magnifying=false debounce=true
+986827.5642249167 schedule scrolling=true magnifying=false debounce=true
+986827.5768698751 navigate index=627
+986827.603914625 schedule scrolling=true magnifying=false debounce=true
+986827.6040745 schedule scrolling=true magnifying=false debounce=true
+986827.62957975 schedule scrolling=true magnifying=false debounce=true
+986827.6753012084 schedule scrolling=true magnifying=false debounce=true
+986827.6880812084 schedule scrolling=true magnifying=false debounce=true
+986827.707395875 schedule scrolling=true magnifying=false debounce=true
+986827.725222875 schedule scrolling=true magnifying=false debounce=true
+986827.7381715417 schedule scrolling=true magnifying=false debounce=true
+986827.7543560001 schedule scrolling=true magnifying=false debounce=true
+986827.7677577501 schedule scrolling=true magnifying=false debounce=true
+986827.7928327917 phase idle scrolling=false
+986827.7929114584 schedule scrolling=false magnifying=false debounce=false
+986827.7933431667 render-ready scrolling=false
+986827.8441627917 phase animating scrolling=true
+986827.8442307084 schedule scrolling=true magnifying=false debounce=true
+986827.9268688334 render-ready scrolling=true
+986828.3935539584 navigate index=617
+986828.4756468334 schedule scrolling=true magnifying=false debounce=true
+986828.5091984584 schedule scrolling=true magnifying=false debounce=true
+986828.5710214584 phase idle scrolling=false
+986828.5711147917 schedule scrolling=false magnifying=false debounce=false
+986828.5715482084 render-ready scrolling=false
+986828.619753125 phase animating scrolling=true
+986828.6198170834 schedule scrolling=true magnifying=false debounce=true
+986828.7004795001 navigate index=607
+986828.726931125 render-ready scrolling=true
+986828.793041 schedule scrolling=true magnifying=false debounce=true
+986828.8170814167 schedule scrolling=true magnifying=false debounce=true
+986828.8836702084 phase idle scrolling=false
+986828.8837549584 schedule scrolling=false magnifying=false debounce=false
+986828.8841880417 render-ready scrolling=false
+986828.9120340834 navigate index=597
+986828.9329391251 phase animating scrolling=true
+986828.9329937084 schedule scrolling=true magnifying=false debounce=true
+986829.0009015001 schedule scrolling=true magnifying=false debounce=true
+986829.0253837084 schedule scrolling=true magnifying=false debounce=true
+986829.0831894584 navigate index=587
+986829.1133476667 render-ready scrolling=true
+986829.1675802501 schedule scrolling=true magnifying=false debounce=true
+986829.2010287917 schedule scrolling=true magnifying=false debounce=true
+986829.261810375 phase idle scrolling=false
+986829.2618883334 schedule scrolling=false magnifying=false debounce=false
+986829.2623282084 render-ready scrolling=false
+986829.3129212084 phase animating scrolling=true
+986829.3129912084 schedule scrolling=true magnifying=false debounce=true
+986829.3993596251 render-ready scrolling=true
+986829.5842350834 navigate index=577
+986829.6755977917 navigate index=567
+986829.6888472501 schedule scrolling=true magnifying=false debounce=true
+986829.6889301251 schedule scrolling=true magnifying=false debounce=true
+986829.704887875 schedule scrolling=true magnifying=false debounce=true
+986829.726609 schedule scrolling=true magnifying=false debounce=true
+986829.7675711251 navigate index=557
+986829.7812008334 schedule scrolling=true magnifying=false debounce=true
+986829.7812658334 schedule scrolling=true magnifying=false debounce=true
+986829.7978962917 schedule scrolling=true magnifying=false debounce=true
+986829.8176613334 schedule scrolling=true magnifying=false debounce=true
+986829.8333663334 navigate index=547
+986829.8895287918 schedule scrolling=true magnifying=false debounce=true
+986829.9009565001 schedule scrolling=true magnifying=false debounce=true
+986829.9170304583 navigate index=537
+986829.9772456667 schedule scrolling=true magnifying=false debounce=true
+986829.9925739584 schedule scrolling=true magnifying=false debounce=true
+986829.9999052917 navigate index=527
+986830.0569006251 schedule scrolling=true magnifying=false debounce=true
+986830.0674106667 schedule scrolling=true magnifying=false debounce=true
+986830.0837207501 navigate index=517
+986830.1510267501 schedule scrolling=true magnifying=false debounce=true
+986830.159263625 schedule scrolling=true magnifying=false debounce=true
+986830.1750765417 navigate index=507
+986830.2403037084 schedule scrolling=true magnifying=false debounce=true
+986830.2501461251 navigate index=497
+986830.2647299584 schedule scrolling=true magnifying=false debounce=true
+986830.2647949167 schedule scrolling=true magnifying=false debounce=true
+986830.275214125 schedule scrolling=true magnifying=false debounce=true
+986830.3082505417 schedule scrolling=true magnifying=false debounce=true
+986830.3176004167 schedule scrolling=true magnifying=false debounce=true
+986830.3507330834 schedule scrolling=true magnifying=false debounce=true
+986830.3757149584 schedule scrolling=true magnifying=false debounce=true
+986830.4340420834 phase idle scrolling=false
+986830.4341255834 schedule scrolling=false magnifying=false debounce=false
+986830.4345422917 render-ready scrolling=false
+986830.4765009584 phase animating scrolling=true
+986830.4765842084 schedule scrolling=true magnifying=false debounce=true
+986830.562993375 render-ready scrolling=true
+986831.0510300001 schedule scrolling=true magnifying=false debounce=true
+986831.0592578751 schedule scrolling=true magnifying=false debounce=true
+986831.0755994584 schedule scrolling=true magnifying=false debounce=true
+986831.0871985417 schedule scrolling=true magnifying=false debounce=true
+986831.1051307501 schedule scrolling=true magnifying=false debounce=true
+986831.1209780001 schedule scrolling=true magnifying=false debounce=true
+986831.1386710834 schedule scrolling=true magnifying=false debounce=true
+986831.1545062917 schedule scrolling=true magnifying=false debounce=true
+986831.1675426251 schedule scrolling=true magnifying=false debounce=true
+986831.1839815418 phase idle scrolling=false
+986831.1840554167 schedule scrolling=false magnifying=false debounce=false
+986831.1844736667 render-ready scrolling=false
+986831.6890859584 phase animating scrolling=true
+986831.6891802084 schedule scrolling=true magnifying=false debounce=true
+986831.7204100001 schedule scrolling=true magnifying=false debounce=true
+986831.7495965001 schedule scrolling=true magnifying=false debounce=true
+986831.7621266667 schedule scrolling=true magnifying=false debounce=true
+986831.7796018751 schedule scrolling=true magnifying=false debounce=true
+986831.7950572917 schedule scrolling=true magnifying=false debounce=true
+986831.8030591251 schedule scrolling=true magnifying=false debounce=true
+986831.8113503751 schedule scrolling=true magnifying=false debounce=true
+986831.8176908334 schedule scrolling=true magnifying=false debounce=true
+986831.8259380001 schedule scrolling=true magnifying=false debounce=true
+986831.8445558334 phase idle scrolling=false
+986831.8446202917 schedule scrolling=false magnifying=false debounce=false
+986831.8477056251 render-ready scrolling=false
+986831.916939625 phase animating scrolling=true
+986831.9169913334 schedule scrolling=true magnifying=false debounce=true
+986831.9621961667 schedule scrolling=true magnifying=false debounce=true
+986831.9694655834 schedule scrolling=true magnifying=false debounce=true
+986831.978209375 schedule scrolling=true magnifying=false debounce=true
+986831.9860830834 schedule scrolling=true magnifying=false debounce=true
+986831.9951364584 schedule scrolling=true magnifying=false debounce=true
+986832.002703625 schedule scrolling=true magnifying=false debounce=true
+986832.0113949167 schedule scrolling=true magnifying=false debounce=true
+986832.0172107917 schedule scrolling=true magnifying=false debounce=true
+986832.0282692084 schedule scrolling=true magnifying=false debounce=true
+986832.0372457918 schedule scrolling=true magnifying=false debounce=true
+986832.0421242501 schedule scrolling=true magnifying=false debounce=true
+986832.0509152918 schedule scrolling=true magnifying=false debounce=true
+986832.0695519584 phase idle scrolling=false
+986832.0696219584 schedule scrolling=false magnifying=false debounce=false
+986832.0725142501 render-ready scrolling=false
+986832.1358504167 phase animating scrolling=true
+986832.1359092917 schedule scrolling=true magnifying=false debounce=true
+986832.1678635417 schedule scrolling=true magnifying=false debounce=true
+986832.17801625 schedule scrolling=true magnifying=false debounce=true
+986832.1846057917 schedule scrolling=true magnifying=false debounce=true
+986832.1950198334 schedule scrolling=true magnifying=false debounce=true
+986832.2028472917 schedule scrolling=true magnifying=false debounce=true
+986832.2087869167 schedule scrolling=true magnifying=false debounce=true
+986832.2196373751 schedule scrolling=true magnifying=false debounce=true
+986832.2278899584 schedule scrolling=true magnifying=false debounce=true
+986832.23627875 schedule scrolling=true magnifying=false debounce=true
+986832.2445165834 schedule scrolling=true magnifying=false debounce=true
+986832.2506415833 schedule scrolling=true magnifying=false debounce=true
+986832.2819296668 schedule scrolling=true magnifying=false debounce=true
+986832.312857375 phase idle scrolling=false
+986832.3129391667 schedule scrolling=false magnifying=false debounce=false
+986832.3180467917 render-ready scrolling=false
+986832.4394011251 schedule scrolling=false magnifying=false debounce=false
+986832.4480343751 render-ready scrolling=false
+986832.5033564167 phase animating scrolling=true
+986832.5034219167 schedule scrolling=true magnifying=false debounce=true
+986832.5897465417 render-ready scrolling=true
+986832.8675829167 schedule scrolling=true magnifying=false debounce=true
+986832.8790563334 schedule scrolling=true magnifying=false debounce=true
+986832.8964632084 schedule scrolling=true magnifying=false debounce=true
+986832.9134643334 schedule scrolling=true magnifying=false debounce=true
+986832.93018625 schedule scrolling=true magnifying=false debounce=true
+986832.94843125 schedule scrolling=true magnifying=false debounce=true
+986832.9639687918 schedule scrolling=true magnifying=false debounce=true
+986832.9800768751 schedule scrolling=true magnifying=false debounce=true
+986832.99283775 schedule scrolling=true magnifying=false debounce=true
+986833.0036969584 phase idle scrolling=false
+986833.0037805 schedule scrolling=false magnifying=false debounce=false
+986833.0069270834 render-ready scrolling=false
+986833.309969 navigate index=1235
+986833.3339543334 phase animating scrolling=true
+986833.334014 schedule scrolling=true magnifying=false debounce=true
+986833.4020004584 schedule scrolling=true magnifying=false debounce=true
+986833.4337887918 schedule scrolling=true magnifying=false debounce=true
+986833.4964126667 phase idle scrolling=false
+986833.4964919584 schedule scrolling=false magnifying=false debounce=false
+986833.4968525417 render-ready scrolling=false
+986833.5436117084 phase animating scrolling=true
+986833.5436756251 schedule scrolling=true magnifying=false debounce=true
+986833.62651275 render-ready scrolling=true
+986833.7926295834 navigate index=1245
+986833.8838955001 schedule scrolling=true magnifying=false debounce=true
+986833.9086273334 schedule scrolling=true magnifying=false debounce=true
+986833.9674101667 phase idle scrolling=false
+986833.9674891668 schedule scrolling=false magnifying=false debounce=false
+986833.9678792917 render-ready scrolling=false
+986834.010219 navigate index=1255
+986834.0208125 phase animating scrolling=true
+986834.0208776251 schedule scrolling=true magnifying=false debounce=true
+986834.1105877084 render-ready scrolling=true
+986834.2251254168 navigate index=1265
+986834.2924110417 schedule scrolling=true magnifying=false debounce=true
+986834.3090025 schedule scrolling=true magnifying=false debounce=true
+986834.3422277917 schedule scrolling=true magnifying=false debounce=true
+986834.3589603334 schedule scrolling=true magnifying=false debounce=true
+986834.4053185 phase idle scrolling=false
+986834.4054000417 schedule scrolling=false magnifying=false debounce=false
+986834.405715625 render-ready scrolling=false
+986834.45064125 phase animating scrolling=true
+986834.4507035834 schedule scrolling=true magnifying=false debounce=true
+986834.5351417917 render-ready scrolling=true
+986835.20875075 schedule scrolling=true magnifying=false debounce=true
+986835.2172862501 schedule scrolling=true magnifying=false debounce=true
+986835.2424592084 schedule scrolling=true magnifying=false debounce=true
+986835.2586117084 schedule scrolling=true magnifying=false debounce=true
+986835.2671452501 schedule scrolling=true magnifying=false debounce=true
+986835.303250625 phase idle scrolling=false
+986835.3033202917 schedule scrolling=false magnifying=false debounce=false
+986835.303712625 render-ready scrolling=false
+986835.3920645417 phase animating scrolling=true
+986835.392139625 schedule scrolling=true magnifying=false debounce=true
+986835.4254220417 schedule scrolling=true magnifying=false debounce=true
+986835.4373704584 schedule scrolling=true magnifying=false debounce=true
+986835.4544505001 schedule scrolling=true magnifying=false debounce=true
+986835.4721917917 schedule scrolling=true magnifying=false debounce=true
+986835.4893577084 schedule scrolling=true magnifying=false debounce=true
+986835.5333545418 phase idle scrolling=false
+986835.5334257084 schedule scrolling=false magnifying=false debounce=false
+986835.5334596668 schedule scrolling=false magnifying=false debounce=false
+986835.5420726667 render-ready scrolling=false
+986835.5946870834 phase animating scrolling=true
+986835.594756125 schedule scrolling=true magnifying=false debounce=true
+986835.6103779167 schedule scrolling=true magnifying=false debounce=true
+986835.6221982084 schedule scrolling=true magnifying=false debounce=true
+986835.6342087084 schedule scrolling=true magnifying=false debounce=true
+986835.6610774584 phase idle scrolling=false
+986835.6611470417 schedule scrolling=false magnifying=false debounce=false
+986835.6648516251 render-ready scrolling=false
+986835.7503035418 phase animating scrolling=true
+986835.7503674584 schedule scrolling=true magnifying=false debounce=true
+986835.7923376667 schedule scrolling=true magnifying=false debounce=true
+986835.8042575418 schedule scrolling=true magnifying=false debounce=true
+986835.8175821668 schedule scrolling=true magnifying=false debounce=true
+986835.8291015001 schedule scrolling=true magnifying=false debounce=true
+986835.8464887084 schedule scrolling=true magnifying=false debounce=true
+986835.863100875 schedule scrolling=true magnifying=false debounce=true
+986835.8762529584 schedule scrolling=true magnifying=false debounce=true
+986835.936887625 phase idle scrolling=false
+986835.9369427917 schedule scrolling=false magnifying=false debounce=false
+986835.940794 render-ready scrolling=false
+986836.2393802918 phase animating scrolling=true
+986836.2394666667 schedule scrolling=true magnifying=false debounce=true
+986836.2796759584 schedule scrolling=true magnifying=false debounce=true
+986836.2965584167 schedule scrolling=true magnifying=false debounce=true
+986836.3139928334 schedule scrolling=true magnifying=false debounce=true
+986836.3292196251 schedule scrolling=true magnifying=false debounce=true
+986836.3465989584 schedule scrolling=true magnifying=false debounce=true
+986836.3626544584 schedule scrolling=true magnifying=false debounce=true
+986836.375969875 schedule scrolling=true magnifying=false debounce=true
+986836.427554875 phase idle scrolling=false
+986836.4276339167 schedule scrolling=false magnifying=false debounce=false
+986836.4343165834 render-ready scrolling=false
+986836.594972125 phase animating scrolling=true
+986836.595073875 schedule scrolling=true magnifying=false debounce=true
+986836.6368928334 schedule scrolling=true magnifying=false debounce=true
+986836.6552167501 schedule scrolling=true magnifying=false debounce=true
+986836.67233225 schedule scrolling=true magnifying=false debounce=true
+986836.6877699167 schedule scrolling=true magnifying=false debounce=true
+986836.7041099167 schedule scrolling=true magnifying=false debounce=true
+986836.7213386251 schedule scrolling=true magnifying=false debounce=true
+986836.7345266667 schedule scrolling=true magnifying=false debounce=true
+986836.7493355417 phase idle scrolling=false
+986836.7494102501 schedule scrolling=false magnifying=false debounce=false
+986836.7497980001 render-ready scrolling=false
+986836.8078105834 phase animating scrolling=true
+986836.8078750417 schedule scrolling=true magnifying=false debounce=true
+986836.8525325834 schedule scrolling=true magnifying=false debounce=true
+986836.8720257501 schedule scrolling=true magnifying=false debounce=true
+986836.8842659168 schedule scrolling=true magnifying=false debounce=true
+986836.8954464167 schedule scrolling=true magnifying=false debounce=true
+986836.9127285834 schedule scrolling=true magnifying=false debounce=true
+986836.9256713334 schedule scrolling=true magnifying=false debounce=true
+986836.9338669167 schedule scrolling=true magnifying=false debounce=true
+986836.9659639584 phase idle scrolling=false
+986836.9660365417 schedule scrolling=false magnifying=false debounce=false
+986836.9664021668 render-ready scrolling=false
+986837.1938460417 phase animating scrolling=true
+986837.1938913751 schedule scrolling=true magnifying=false debounce=true
+986837.2487485417 schedule scrolling=true magnifying=false debounce=true
+986837.265806625 schedule scrolling=true magnifying=false debounce=true
+986837.2801396667 schedule scrolling=true magnifying=false debounce=true
+986837.2969365417 schedule scrolling=true magnifying=false debounce=true
+986837.3153355 schedule scrolling=true magnifying=false debounce=true
+986837.3257751667 schedule scrolling=true magnifying=false debounce=true
+986837.3440269168 phase idle scrolling=false
+986837.3441001667 schedule scrolling=false magnifying=false debounce=false
+986837.3479671667 render-ready scrolling=false
+986837.44287775 phase animating scrolling=true
+986837.4429360001 schedule scrolling=true magnifying=false debounce=true
+986837.4837762084 schedule scrolling=true magnifying=false debounce=true
+986837.492066 schedule scrolling=true magnifying=false debounce=true
+986837.5174336667 schedule scrolling=true magnifying=false debounce=true
+986837.5423806667 schedule scrolling=true magnifying=false debounce=true
+986837.5672463333 schedule scrolling=true magnifying=false debounce=true
+986837.599254125 phase idle scrolling=false
+986837.5993344584 schedule scrolling=false magnifying=false debounce=false
+986837.5996992084 render-ready scrolling=false
+986856.6757797084 phase idle scrolling=false
+986856.6758610418 schedule scrolling=false magnifying=false debounce=false
+986856.6759065418 schedule scrolling=false magnifying=false debounce=false
+986856.6759312918 schedule scrolling=false magnifying=false debounce=false
+986856.6821690417 schedule scrolling=false magnifying=false debounce=false
+986856.7037595417 schedule scrolling=false magnifying=false debounce=false
+986856.7038459168 schedule scrolling=false magnifying=false debounce=false
+986856.7246052917 schedule scrolling=false magnifying=false debounce=false
+986856.7412675001 render-ready scrolling=false
+986856.78469925 render-ready scrolling=false

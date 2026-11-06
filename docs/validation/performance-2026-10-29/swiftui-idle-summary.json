@@ -1,0 +1,35 @@
+{
+  "artifact": "/private/tmp/sfv-footer-build/Build/Products/Debug/ScreenshotFromVideos.app",
+  "pid": 66283,
+  "setup": "AX verified Play icon, native player off, zoom slider 1, timecode 00:17:22:07 before recording; no UI input by agent.",
+  "trace": "/private/tmp/sfv-swiftui-idle-2026-10-29.trace",
+  "updates_xml": "/private/tmp/sfv-swiftui-idle-updates.xml",
+  "requested_recording_seconds": 10,
+  "event_range_s": [
+    0.581090333,
+    14.14886975
+  ],
+  "total_events": 1631,
+  "event_types": {
+    "Other Updates": 1631
+  },
+  "stable_analysis_window_s": [
+    2,
+    9
+  ],
+  "stable_window_body_accessor_counts": {
+    "StripTransportBar": 0,
+    "ThumbnailStripView": 0,
+    "ThumbnailCellView": 0,
+    "LeftPaneView": 0
+  },
+  "stable_window_other_event_count": 839,
+  "description_counts": {
+    "UpdateFilter<PeriodicTimelineSchedule, ModifiedContent<Text, _FixedSizeLayout>>": 1631
+  },
+  "limitations": [
+    "Late attach: count body-accessor descriptions rather than relying on View Body Updates classification.",
+    "Zero count is scoped to named outer custom views; framework/TimelineView events still occur.",
+    "Playback trace provides positive body-accessor capture control for StripTransportBar (360 events in 12 seconds)."
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "case": "shuttle-forward-4x",
+  "pid": 93956,
+  "identity": "Thu Oct 29 12:55:20 2026     /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos",
+  "executable": "/private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos",
+  "executable_sha256": "65517894092ad2f342eb10de5804dcfa7c10ab281edca52d2206950375f7d388",
+  "started_utc": "2026-10-29T12:16:58.192551+00:00",
+  "effects": "Read-only ps; no app input/startup/data mutation; evidence JSON only",
+  "samples": [
+    {
+      "elapsed_s": 0.009,
+      "cpu_percent": 106.3,
+      "rss_kib": 221072,
+      "raw": "106.3 221072 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 1.029,
+      "cpu_percent": 105.4,
+      "rss_kib": 221072,
+      "raw": "105.4 221072 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 2.02,
+      "cpu_percent": 127.3,
+      "rss_kib": 224448,
+      "raw": "127.3 224448 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 3.015,
+      "cpu_percent": 112.5,
+      "rss_kib": 224576,
+      "raw": "112.5 224576 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 4.033,
+      "cpu_percent": 105.5,
+      "rss_kib": 224704,
+      "raw": "105.5 224704 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 5.043,
+      "cpu_percent": 105.7,
+      "rss_kib": 224912,
+      "raw": "105.7 224912 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 6.013,
+      "cpu_percent": 105.6,
+      "rss_kib": 225104,
+      "raw": "105.6 225104 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 7.013,
+      "cpu_percent": 106.0,
+      "rss_kib": 225280,
+      "raw": "106.0 225280 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 8.013,
+      "cpu_percent": 106.5,
+      "rss_kib": 225360,
+      "raw": "106.5 225360 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 9.028,
+      "cpu_percent": 104.9,
+      "rss_kib": 227936,
+      "raw": "104.9 227936 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 10.037,
+      "cpu_percent": 121.9,
+      "rss_kib": 230960,
+      "raw": "121.9 230960 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 11.042,
+      "cpu_percent": 114.9,
+      "rss_kib": 232016,
+      "raw": "114.9 232016 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 12.036,
+      "cpu_percent": 116.8,
+      "rss_kib": 232592,
+      "raw": "116.8 232592 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 13.033,
+      "cpu_percent": 117.0,
+      "rss_kib": 233552,
+      "raw": "117.0 233552 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 14.144,
+      "cpu_percent": 105.2,
+      "rss_kib": 233536,
+      "raw": "105.2 233536 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 15.038,
+      "cpu_percent": 123.6,
+      "rss_kib": 235168,
+      "raw": "123.6 235168 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 16.036,
+      "cpu_percent": 135.6,
+      "rss_kib": 236288,
+      "raw": "135.6 236288 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 17.032,
+      "cpu_percent": 107.0,
+      "rss_kib": 235904,
+      "raw": "107.0 235904 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 18.017,
+      "cpu_percent": 137.5,
+      "rss_kib": 207760,
+      "raw": "137.5 207760 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 19.04,
+      "cpu_percent": 145.7,
+      "rss_kib": 236960,
+      "raw": "145.7 236960 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 20.036,
+      "cpu_percent": 129.1,
+      "rss_kib": 237056,
+      "raw": "129.1 237056 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 21.037,
+      "cpu_percent": 122.4,
+      "rss_kib": 236800,
+      "raw": "122.4 236800 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 22.12,
+      "cpu_percent": 133.6,
+      "rss_kib": 237136,
+      "raw": "133.6 237136 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 23.044,
+      "cpu_percent": 146.4,
+      "rss_kib": 237280,
+      "raw": "146.4 237280 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 24.027,
+      "cpu_percent": 128.6,
+      "rss_kib": 237264,
+      "raw": "128.6 237264 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 25.03,
+      "cpu_percent": 134.3,
+      "rss_kib": 237360,
+      "raw": "134.3 237360 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 26.026,
+      "cpu_percent": 112.3,
+      "rss_kib": 236976,
+      "raw": "112.3 236976 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 27.018,
+      "cpu_percent": 142.6,
+      "rss_kib": 237504,
+      "raw": "142.6 237504 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 28.037,
+      "cpu_percent": 136.5,
+      "rss_kib": 237616,
+      "raw": "136.5 237616 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    },
+    {
+      "elapsed_s": 29.031,
+      "cpu_percent": 139.3,
+      "rss_kib": 237664,
+      "raw": "139.3 237664 /private/tmp/sfv-wave3-final-build/Build/Products/Debug/ScreenshotFromVideos.app/Contents/MacOS/ScreenshotFromVideos"
+    }
+  ],
+  "status": "complete",
+  "duration_s": 30.017,
+  "average_cpu_percent": 121.2,
+  "minimum_cpu_percent": 104.9,
+  "maximum_cpu_percent": 146.4,
+  "peak_rss_kib": 237664
+}

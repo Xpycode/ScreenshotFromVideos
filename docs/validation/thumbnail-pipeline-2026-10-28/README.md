@@ -27,3 +27,6 @@ Load the converted clip without touching zoom: all visible thumbnails should fil
 - https://developer.apple.com/documentation/avfoundation/creating-images-from-a-video-asset
 - https://developer.apple.com/documentation/avfoundation/avassetimagegenerator/cancelallcgimagegeneration()
 - https://developer.apple.com/documentation/swiftui/view/onscrollgeometrychange(for:of:action:)
+
+## Live result reported by user
+Pipeline build launched and executable path verified. Converted clip: complete initial fill in <1 second without zoom; every-frame zoom and zoom-out both work. Original 6K clip: complete initial fill around 2 seconds; zoom faster, remaining delay explicitly accepted. These are user-observed timings, not instrumented measurements. Thumbnail regression accepted on both fixtures; other Wave 2 gates remain open.

@@ -1,0 +1,89 @@
+--- /private/tmp/sfv-wave3-strip-before.swift	2026-10-29 04:39:01
++++ 01_Project/ScreenshotFromVideos/Thumbnail/ThumbnailStripView.swift	2026-10-29 04:40:51
+@@ -20,6 +20,7 @@
+     let vm: ExtractionViewModel
+ 
+     @State private var activeIndex: Int = -1
++    @State private var seekCoalescer = SeekCoalescer()
+     @State private var visibleRows: ClosedRange<Int> = 0...0
+     @State private var scrollViewport = ThumbnailViewport(size: .zero, offsetY: 0)
+     @State private var viewportSize: CGSize = .zero
+@@ -101,13 +102,9 @@
+     /// recenters the strip on the landing spot (debounced).
+     private func jump(by seconds: Double) {
+         guard let player else { return }
+-        let cur = CMTimeGetSeconds(player.currentTime())
++        let cur = CMTimeGetSeconds(seekCoalescer.pendingTarget(on: player) ?? player.currentTime())
+         let target = max(0, min(model.duration, cur + seconds))
+-        player.seek(
+-            to: CMTime(seconds: target, preferredTimescale: 600),
+-            toleranceBefore: .zero,
+-            toleranceAfter: .zero
+-        )
++        seekCoalescer.request(CMTime(seconds: target, preferredTimescale: 600), on: player)
+         stripFocused = true
+     }
+ 
+@@ -139,11 +136,7 @@
+                             playerIdentity: playerIdentity,
+                             captureOwnerIdentity: ObjectIdentifier(vm),
+                             onTap: { tappedTime in
+-                                player?.seek(
+-                                    to: tappedTime,
+-                                    toleranceBefore: .zero,
+-                                    toleranceAfter: .zero
+-                                )
++                                if let player { seekCoalescer.request(tappedTime, on: player) }
+                                 stripFocused = true
+                             },
+                             onCmdTap: { tappedTime in
+@@ -315,8 +308,13 @@
+             refreshViewport(scrollViewport, forceRender: true)
+         }
+         .onScrollPhaseChange { _, new in
++#if SFV_SEEK_DIAGNOSTICS
++            SeekScrollDiagnostics.record("phase \(String(describing: new)) scrolling=\(new.isScrolling)")
++#endif
+             model.onScrollPhaseChange(isScrolling: new.isScrolling)
+         }
++        .onChange(of: playerIdentity) { _, _ in seekCoalescer.reset() }
++        .onDisappear { seekCoalescer.reset() }
+         .task(id: playerIdentity) {
+             await observePlayerTime()
+         }
+@@ -419,10 +417,21 @@
+ 
+     // Arrow-key navigation: step the active cell by `offset` (±1 for ←/→,
+     // ±cellsPerRow for ↑/↓), seek the player to that cell's time, and bring it
+-    // into view. Anchors off the current active cell so it tracks player state.
++    // into view. Pending input is the anchor during a seek, so held keys advance
++    // even before the player's periodic observer reports the landing time.
+     private func navigate(by offset: Int) {
+         guard offset != 0 else { return }
+-        navigate(to: max(0, activeIndex) + offset)
++        let current: Int
++        if let player {
++            let time = seekCoalescer.pendingTarget(on: player) ?? player.currentTime()
++            let seconds = CMTimeGetSeconds(time)
++            current = seconds.isFinite
++                ? Int((max(0, min(model.duration, seconds)) * model.density).rounded())
++                : max(0, activeIndex)
++        } else {
++            current = max(0, activeIndex)
++        }
++        navigate(to: current + offset)
+     }
+ 
+     private var pageStride: Int {
+@@ -435,7 +444,10 @@
+         let count = allTimes.count
+         guard count > 0 else { return }
+         let target = max(0, min(count - 1, index))
+-        player?.seek(to: allTimes[target], toleranceBefore: .zero, toleranceAfter: .zero)
++#if SFV_SEEK_DIAGNOSTICS
++        SeekScrollDiagnostics.record("navigate index=\(target)")
++#endif
++        if let player { seekCoalescer.request(allTimes[target], on: player) }
+         seekScrollTarget = target
+     }
+ 

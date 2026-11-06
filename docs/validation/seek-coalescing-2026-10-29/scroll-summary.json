@@ -1,0 +1,17 @@
+{
+  "events": 542,
+  "navigation_events": 90,
+  "first_last_navigation_index": [
+    2,
+    1265
+  ],
+  "counts": {
+    "phase idle scrolling=false": 33,
+    "schedule scrolling=false magnifying=false debounce=false": 46,
+    "render-ready scrolling=false": 35,
+    "phase animating scrolling=true": 31,
+    "schedule scrolling=true magnifying=false debounce=true": 293,
+    "render-ready scrolling=true": 14
+  },
+  "verdict": "Animated seek scroll reports isScrolling=true; scrolling schedules already use 80 ms debounce. Task 3.2 closes as no-op."
+}

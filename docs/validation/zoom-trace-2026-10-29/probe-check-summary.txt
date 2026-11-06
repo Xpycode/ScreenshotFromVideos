@@ -1,0 +1,3 @@
+Headless diagnostic-only smoke: no app launch, no media decode, no preferences/network. Swift 6 complete concurrency, warnings-as-errors.
+Diagnostic compile/run exit 0; PID20967 filteredEvaluations=0. 50,000 unrelated cell events suppressed; all five expected events retained, no TRACE-LIMIT.
+Default compile/run exit 0; PID21439 filteredEvaluations=0; no trace file created.

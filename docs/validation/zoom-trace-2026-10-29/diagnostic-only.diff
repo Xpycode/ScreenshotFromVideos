@@ -1,0 +1,297 @@
+--- before/StripModel.swift
++++ diagnostic/StripModel.swift
+@@ -24,6 +24,7 @@
+     let renderer: ThumbnailRenderer
+     var cacheVersion: Int = 0
+ 
++    @ObservationIgnored private var traceBatch = 0
+     @ObservationIgnored private var task: Task<Void, Never>?
+     @ObservationIgnored private var zoomBaseline: Double = 1.0
+     @ObservationIgnored private var zoomRenderDeadline: ContinuousClock.Instant?
+@@ -141,9 +142,10 @@
+         // the baseline captured in onMagnifyStart — multiplying zoomLevel
+         // directly would compound on every tick.
+         let next = max(1.0, min(12.0, zoomBaseline * magnification))
++        ZoomTrace.event("zoom old=\(zoomLevel) new=\(next) range=\(visibleTimeRange)")
+         zoomLevel = next
+         zoomRenderDeadline = .now + .milliseconds(80)
+-        scheduleRender()
++        scheduleRender(reason: "pinch")
+     }
+ 
+     func commitZoom(_ magnification: Double) {
+@@ -153,22 +155,22 @@
+     func onMagnifyStart() {
+         isMagnifying = true
+         zoomBaseline = zoomLevel
+-        scheduleRender()
++        scheduleRender(reason: "pinch-start")
+     }
+ 
+     func onMagnifyEnd() {
+         isMagnifying = false
+-        scheduleRender()
++        scheduleRender(reason: "pinch-end")
+     }
+ 
+     func onVisibleRangeChange(_ range: ClosedRange<Double>) {
+         visibleTimeRange = range
+-        scheduleRender()
++        scheduleRender(reason: "viewport")
+     }
+ 
+     func onScrollPhaseChange(isScrolling: Bool) {
+         self.isScrolling = isScrolling
+-        scheduleRender()
++        scheduleRender(reason: "scroll-phase")
+     }
+ 
+     // MARK: - Zoom (keyboard / scroll-wheel / slider entry points)
+@@ -182,10 +184,11 @@
+     func setZoom(_ value: Double) {
+         let next = max(1.0, min(12.0, value))
+         guard next != zoomLevel else { return }
++        ZoomTrace.event("zoom old=\(zoomLevel) new=\(next) range=\(visibleTimeRange)")
+         zoomLevel = next
+         zoomBaseline = next
+         zoomRenderDeadline = .now + .milliseconds(80)
+-        scheduleRender()
++        scheduleRender(reason: "zoom")
+     }
+ 
+     func applyZoomDelta(_ delta: CGFloat) {
+@@ -209,8 +212,11 @@
+     // is the right behavior: few images, each should appear promptly.
+     private static let cacheVersionThrottle: Duration = .milliseconds(100)
+ 
+-    func scheduleRender() {
++    func scheduleRender(reason: String = "unspecified") {
++        ZoomTrace.event("cancel-request batch=\(traceBatch) reason=\(reason)")
+         task?.cancel()
++        traceBatch &+= 1
++        let batchID = traceBatch
+         let bucket = widthBucket
+         let tol = tolerance
+         let range = prefetchRange
+@@ -221,7 +227,10 @@
+         // decodes its first thumbnail. Geometry callbacks must share this
+         // deadline too, or they immediately bypass the zoom debounce.
+         let zoomDeadline = zoomRenderDeadline
++        ZoomTrace.event("schedule batch=\(batchID) reason=\(reason) zoom=\(zoomLevel) density=\(density) bucket=\(bucket) visible=\(visibleTimeRange) prefetch=\(range) demand=\(batchTimes.count) debounce=\(shouldDebounce)")
+         task = Task { [weak self] in
++            var stored = 0
++            defer { ZoomTrace.event("batch-end batch=\(batchID) cancelled=\(Task.isCancelled) stored=\(stored)") }
+             if shouldDebounce {
+                 try? await Task.sleep(for: .milliseconds(80))
+                 if Task.isCancelled { return }
+@@ -238,6 +247,7 @@
+                 )
+                 return self.cache.image(for: key) == nil
+             }
++            ZoomTrace.event("cache-scan batch=\(batchID) demand=\(batchTimes.count) missing=\(missing.count)")
+             if missing.isEmpty { return }
+             // Prioritize cells closest to the visible center, then cap.
+             // Off-center prefetch loses first when we have to drop.
+@@ -260,15 +270,20 @@
+             // image even then: the successor skips cache hits and might have no
+             // new images with which to trigger another refresh.
+             defer {
+-                if pendingSinceBump { self.cacheVersion &+= 1 }
+-            }
+-            for await (time, image) in self.renderer.render(times: capped, targetWidth: bucket, tolerance: tol) {
++                if pendingSinceBump {
++                    self.cacheVersion &+= 1
++                    ZoomTrace.event("refresh batch=\(batchID) version=\(self.cacheVersion) final=true")
++                }
++            }
++            for await (time, image) in self.renderer.render(times: capped, targetWidth: bucket, tolerance: tol, traceID: batchID) {
+                 if Task.isCancelled { return }
+                 let key = ThumbKey(
+                     timeMillis: Int64((CMTimeGetSeconds(time) * 1000).rounded()),
+                     widthBucket: bucket
+                 )
+                 self.cache.store(image, for: key, cost: ThumbnailCache.cost(of: image))
++                stored += 1
++                ZoomTrace.event("cache-store batch=\(batchID) key=\(key.timeMillis) bucket=\(bucket) retained=\(self.cache.image(for: key) != nil)")
+                 pendingSinceBump = true
+                 let now = ContinuousClock.now
+                 let due = lastBump.map { now - $0 >= Self.cacheVersionThrottle } ?? true
+@@ -276,6 +291,7 @@
+                     lastBump = now
+                     pendingSinceBump = false
+                     self.cacheVersion &+= 1
++                    ZoomTrace.event("refresh batch=\(batchID) version=\(self.cacheVersion) final=false")
+                 }
+             }
+         }
+--- before/ThumbnailRenderer.swift
++++ diagnostic/ThumbnailRenderer.swift
+@@ -26,7 +26,8 @@
+     func render(
+         times: [CMTime],
+         targetWidth: Int,
+-        tolerance: CMTime
++        tolerance: CMTime,
++        traceID: Int = 0
+     ) -> AsyncStream<(CMTime, CGImage)> {
+         let generator = AVAssetImageGenerator(asset: asset)
+         generator.appliesPreferredTrackTransform = true
+@@ -36,6 +37,7 @@
+         generator.requestedTimeToleranceAfter = tolerance
+ 
+         let box = CancellableGenerator(raw: generator)
++        ZoomTrace.event("decode-start batch=\(traceID) keys=\(times.map { Int64((CMTimeGetSeconds($0) * 1000).rounded()) }) bucket=\(targetWidth) tolerance=\(CMTimeGetSeconds(tolerance))")
+ 
+         return AsyncStream { continuation in
+             let task = Task {
+@@ -47,21 +49,99 @@
+                         for try await result in box.raw.images(for: times) {
+                             try Task.checkCancellation()
+                             switch result {
+-                            case .success(requestedTime: let requested, image: let image, actualTime: _):
++                            case .success(requestedTime: let requested, image: let image, actualTime: let actual):
++                                ZoomTrace.event("decode-success batch=\(traceID) key=\(Int64((CMTimeGetSeconds(requested) * 1000).rounded())) actual=\(CMTimeGetSeconds(actual)) pixels=\(image.width)x\(image.height)")
+                                 continuation.yield((requested, image))
+                             case .failure(requestedTime: let requested, error: let error):
++                                ZoomTrace.event("decode-failure batch=\(traceID) time=\(CMTimeGetSeconds(requested)) error=\(error)")
+                                 print("strip frame failed at \(CMTimeGetSeconds(requested))s: \(error)")
+                             }
+                         }
+                     } catch {
++                        ZoomTrace.event("decode-catch batch=\(traceID) cancelled=\(Task.isCancelled) error=\(error)")
+                         // Cancellation or upstream failure — close the stream.
+                     }
+                     continuation.finish()
++                    ZoomTrace.event("decode-finish batch=\(traceID) cancelled=\(Task.isCancelled)")
+                 } onCancel: {
++                    ZoomTrace.event("decode-cancel batch=\(traceID)")
+                     box.raw.cancelAllCGImageGeneration()
+                 }
+             }
+-            continuation.onTermination = { _ in task.cancel() }
++            continuation.onTermination = { reason in
++                ZoomTrace.event("stream-termination batch=\(traceID) reason=\(reason)")
++                task.cancel()
++            }
+         }
+     }
+ }
++
++// Temporary diagnostic; default builds do not evaluate event strings or open files.
++enum ZoomTrace {
++    static func event(_ message: @autoclosure () -> String) {
++        #if SFV_ZOOM_DIAGNOSTICS
++        sink.write(message())
++        #endif
++    }
++
++    static func cell(_ key: Int64, _ message: @autoclosure () -> String) {
++        #if SFV_ZOOM_DIAGNOSTICS
++        sink.cell(key, message)
++        #endif
++    }
++
++    static func selection(_ key: @autoclosure () -> Int64, bucket: @autoclosure () -> Int,
++                          _ message: @autoclosure () -> String) {
++        #if SFV_ZOOM_DIAGNOSTICS
++        sink.select(key(), bucket: bucket(), message)
++        #endif
++    }
++
++    #if SFV_ZOOM_DIAGNOSTICS
++    private static let sink = Sink()
++
++    private final class Sink: @unchecked Sendable {
++        private let lock = NSLock()
++        private var handle: FileHandle?
++        private var count = 0
++        private var focus: (key: Int64, bucket: Int)?
++
++        init() {
++            let path = "/private/tmp/sfv-zoom-events-\(ProcessInfo.processInfo.processIdentifier).log"
++            if FileManager.default.createFile(atPath: path, contents: nil) {
++                handle = FileHandle(forWritingAtPath: path)
++            }
++        }
++
++        func select(_ key: Int64, bucket: Int, _ message: () -> String) {
++            lock.lock()
++            defer { lock.unlock() }
++            guard focus?.key != key || focus?.bucket != bucket else { return }
++            focus = (key, bucket)
++            writeLocked(message())
++        }
++
++        func cell(_ key: Int64, _ message: () -> String) {
++            lock.lock()
++            defer { lock.unlock() }
++            guard let focus, abs(Double(key) - Double(focus.key)) <= 100 else { return }
++            writeLocked(message())
++        }
++
++        func write(_ message: String) {
++            lock.lock()
++            defer { lock.unlock() }
++            writeLocked(message)
++        }
++
++        private func writeLocked(_ message: String) {
++            guard count <= 100_000 else { return }
++            let text = count == 100_000 ? "TRACE-LIMIT" : message
++            count += 1
++            let line = "\(ProcessInfo.processInfo.systemUptime) event=\(count) \(text)\n"
++            do { try handle?.write(contentsOf: Data(line.utf8)) }
++            catch { handle = nil }
++        }
++    }
++    #endif
++}
+--- before/ThumbnailCellView.swift
++++ diagnostic/ThumbnailCellView.swift
+@@ -86,20 +86,26 @@
+     private var cellIdentity: ThumbKey { exactKey }
+ 
+     private func bestImage() -> CGImage? {
+-        if let img = cache.image(for: exactKey) { return img }
++        if let img = cache.image(for: exactKey) {
++            ZoomTrace.cell(timeMillis, "cell-read key=\(timeMillis) bucket=\(widthBucket) version=\(cacheVersion) source=exact")
++            return img
++        }
+         // Same time at other buckets — SwiftUI's scaledToFill handles the resize.
+         // Wider first: scaling down is visually free.
+         for bucket in [240, 120, 60] where bucket != widthBucket {
+             if let img = cache.image(for: ThumbKey(timeMillis: timeMillis, widthBucket: bucket)) {
++                ZoomTrace.cell(timeMillis, "cell-read key=\(timeMillis) bucket=\(widthBucket) version=\(cacheVersion) source=bucket-\(bucket)")
+                 return img
+             }
+         }
+         // Last resort: the image we showed before the cell rebound to new (time, bucket).
+         // Almost certainly stale, but visually adjacent — beats a grey placeholder.
++        ZoomTrace.cell(timeMillis, "cell-read key=\(timeMillis) bucket=\(widthBucket) version=\(cacheVersion) source=\(lastImage == nil ? "placeholder" : "last-image")")
+         return lastImage
+     }
+ 
+     private func syncLastImage() {
++        ZoomTrace.cell(timeMillis, "cell-sync key=\(timeMillis) bucket=\(widthBucket) version=\(cacheVersion) exact=\(cache.image(for: exactKey) != nil)")
+         if let exact = cache.image(for: exactKey) {
+             lastImage = exact
+         }
+--- before/ThumbnailStripView.swift
++++ diagnostic/ThumbnailStripView.swift
+@@ -456,6 +456,7 @@
+             cellWidth: cellW, density: model.density,
+             duration: model.duration, count: model.thumbnailCount
+         ) else { return }
++        ZoomTrace.event("viewport zoom=\(model.zoomLevel) size=\(viewport.size) offset=\(viewport.offsetY) columns=\(projection.columns) range=\(projection.timeRange) force=\(forceRender)")
+         cellsPerRow = projection.columns
+         visibleRows = projection.fullyVisibleRows
+         if forceRender || model.visibleTimeRange != projection.timeRange {
+@@ -472,6 +473,8 @@
+         let raw = (max(0, min(model.duration, seconds)) * model.density).rounded()
+         let index = min(model.thumbnailCount - 1, Int(raw))
+         if activeIndex != index { activeIndex = index }
++        ZoomTrace.selection(Int64((CMTimeGetSeconds(times[index]) * 1000).rounded()), bucket: model.widthBucket,
++                            "selection index=\(index) key=\(Int64((CMTimeGetSeconds(times[index]) * 1000).rounded())) playerTime=\(seconds) density=\(model.density) bucket=\(model.widthBucket)")
+     }
+ 
+     private func schedulePlaybackFollow() {

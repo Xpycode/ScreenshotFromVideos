@@ -55,8 +55,8 @@ struct ThumbnailCellView: View, Equatable {
             if manualPinned {
                 Circle()
                     .fill(Theme.accent)
-                    .frame(width: 4, height: 4)
-                    .padding(2)
+                    .frame(width: 7, height: 7)
+                    .padding(3)
             }
         }
         .onAppear { syncLastImage() }
