@@ -13,8 +13,8 @@ set -e
 
 cd "$(dirname "$0")/.."
 PROJECT_ROOT=$(pwd)
-PROJECT_NAME="ScreenshotFromVideos"      # Xcode target / scheme / .app name
-DISPLAY_NAME="Stills From Video"         # DMG volume name (matches CFBundleDisplayName)
+PROJECT_NAME="ScreenshotFromVideos"      # Xcode target / scheme (internal)
+DISPLAY_NAME="Stills From Video"         # .app filename (PRODUCT_NAME) + DMG volume name
 DMG_BASENAME="StillsFromVideo"           # DMG filename stem → StillsFromVideo-<version>.dmg
 XCODEPROJ="01_Project/$PROJECT_NAME.xcodeproj"
 
@@ -30,7 +30,7 @@ echo "=== Releasing $DISPLAY_NAME $VERSION ==="
 BUILD="$PROJECT_ROOT/build"
 ARCHIVE_PATH="$BUILD/$PROJECT_NAME.xcarchive"
 EXPORT_PATH="$BUILD/export"
-APP_PATH="$EXPORT_PATH/$PROJECT_NAME.app"
+APP_PATH="$EXPORT_PATH/$DISPLAY_NAME.app"
 DMG_NAME="$DMG_BASENAME-$VERSION.dmg"
 DMG_PATH="$BUILD/$DMG_NAME"
 RELEASES_DIR="$PROJECT_ROOT/releases"

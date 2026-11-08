@@ -116,6 +116,7 @@ Decisions appear in roughly chronological order within each topic so the path of
 **Date:** 2026-05-27 (Phase 4.5)
 **Decision:** `CFBundleName` and `CFBundleDisplayName` → "Stills From Video". All internal identifiers kept as `ScreenshotFromVideos`.
 **Why:** "Screenshot" implies screen capture, but the app accepts arbitrary video files. "Still" is the established cinematography term for an extracted frame. The macOS menu bar reads `CFBundleName` — both bundle strings must match for the rename to read clean.
+**Update 2026-11-08:** user asked that the name be "Stills From Video" everywhere user-facing. `PRODUCT_NAME` → "Stills From Video" so the `.app` file (Finder, /Applications, DMG) matches; `PRODUCT_MODULE_NAME` pinned to `ScreenshotFromVideos`. Target, scheme, bundle ID, folder and GitHub repo stay internal `ScreenshotFromVideos` (bundle ID change would orphan Sparkle updates; repo rename would put `SUFeedURL` on a GitHub redirect).
 
 ### No ⌘⇧O for output folder
 **Date:** Phase 4.5

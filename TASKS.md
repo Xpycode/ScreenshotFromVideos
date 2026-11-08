@@ -7,9 +7,7 @@ None. [Strip/player performance completed](docs/sessions/_archive/2026-11-06_STR
 None. Compact footer and native hover tooltips accepted November 6; strict build and all finite user checks passed. See [evidence](docs/validation/window-width-2026-10-29/README.md).
 
 ## Backlog
-- App filename/display-name mismatch (2026-11-01): user asked why `ScreenshotFromVideos.app` differs from Dock/menu name “Stills From Video”. `project.yml` keeps `PRODUCT_NAME: ScreenshotFromVideos` while CFBundleName/CFBundleDisplayName are “Stills From Video”. Consider aligning the bundle filename and updating build/release/handoff paths; keep internal identifiers stable. Deferred while resolving thumbnail fill.
 - Thumbnail drag scrubbing (2026-10-29): holding the mouse button and dragging across thumbnails leaves the original selected frame active. User clarification confirms the symptom; source currently supports click-to-seek only (`ThumbnailCellView.onTapGesture`), with no drag-selection handler. Add continuous selection/seek while dragging as a future interaction improvement; preserve plain-click and Command-click capture. Not implemented or runtime-reproduced by agent.
-- Install user-selected app icon v3 (three orange screenshots, smaller filmstrip): `02_Design/Icon-2026-10-28/stills-from-video-candidate-v3-1024.png`. Regenerate required app-icon sizes and verify in a fresh build when returning to icon integration. Design accepted 2026-10-28; current app assets unchanged. Performance acceptance is complete; integration remains a future task.
 
 - Video information status bar: show useful loaded-video metadata (duration, resolution, frame rate, codec); user suggested 2026-10-28. Address after thumbnail slowness; placement/content need design review.
 
