@@ -3,9 +3,9 @@
 //  ScreenshotFromVideos
 //
 //  App-shell modifiers per cookbook 00-app-shell.md (MANDATORY): hidden
-//  title bar + dark color scheme. `.environment(\.theme, .dark)` is
-//  intentionally skipped — Theme is a static enum, not an EnvironmentKey,
-//  and views already read `Theme.primaryBackground` etc. directly.
+//  title bar + dark-default appearance, user-switchable via the Appearance
+//  menu. Theme tokens are adaptive Colors (see Theme.swift), so no
+//  `.environment(\.theme, …)` is needed — views read `Theme.xxx` directly.
 //
 
 import SwiftUI
@@ -16,10 +16,10 @@ import HelpMenu
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Pin the whole app dark so the Help window (a standalone NSWindow
-        // that otherwise follows the system) matches the main window.
-        // Replaced by the Appearance menu when light mode lands.
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        // Apply the persisted Appearance choice before any window exists, so
+        // there's no flash of the wrong mode. The scene's `.onChange` keeps it
+        // in sync with later menu picks; NSApp-wide also covers the Help window.
+        NSApp.appearance = AppearancePreference.stored.nsAppearance
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -48,6 +48,10 @@ struct ScreenshotFromVideosApp: App {
     // when `canCheckForUpdates` changes — the closure form lets it go stale.
     @StateObject private var updateController = UpdateController()
 
+    /// Appearance menu choice (Match System / Light / Dark). Dark by default.
+    @AppStorage(AppearancePreference.storageKey)
+    private var appearance: AppearancePreference = AppearancePreference.defaultValue
+
     /// App citizenship via AppCitizenshipKit (same wiring as Conjoyn):
     /// Help › Send Feedback… (FeedbackKit → shared `feedback-submit.php`, which
     /// gates on its `ALLOWED_APPS` list), Help › Leave a Tip (tip-jar hub,
@@ -69,7 +73,9 @@ struct ScreenshotFromVideosApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(vm: vm)
-                .preferredColorScheme(.dark)
+                .onChange(of: appearance) { _, pref in
+                    NSApp.appearance = pref.nsAppearance
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
@@ -99,6 +105,7 @@ struct ScreenshotFromVideosApp: App {
             }
 
             ZoomCommands()
+            AppearanceCommands(appearance: $appearance)
         }
     }
 }

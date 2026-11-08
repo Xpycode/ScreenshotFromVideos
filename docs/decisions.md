@@ -106,6 +106,7 @@ Decisions appear in roughly chronological order within each topic so the path of
 **Date:** Phase 4 Wave 4
 **Decision:** `Theme` is a static enum read via `Theme.primaryBackground`, not an `EnvironmentKey`. Skipped from the original plan.
 **Why:** No per-scheme tokens needed yet (dark-mode-only app). When the deferred light-mode toggle ships, this is the time to revisit and convert `Theme` to an `EnvironmentKey`-backed struct.
+**Update 2026-11-08 (light mode shipped, user-accepted):** `Theme` stays a static enum. The tokens became adaptive `Color`s (an `NSColor` dynamic provider keyed on `NSAppearance`), so no `EnvironmentKey` is needed. The dark values are the unchanged floor; the light values are Conjoyn's soft-gray palette. The Appearance menu (Match System / Light / Dark, default Dark, `@AppStorage("appearancePreference")`) sets `NSApp.appearance`, not `.preferredColorScheme`. That choice also covers the standalone Help window, and the `nil` case cleanly returns to following the system. On-accent, on-video and burn-in whites stay white on purpose.
 
 ### `@State var vm` at App level, not in ContentView
 **Date:** Phase 4.5

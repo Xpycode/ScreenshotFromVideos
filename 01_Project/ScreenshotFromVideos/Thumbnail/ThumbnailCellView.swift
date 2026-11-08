@@ -43,11 +43,11 @@ struct ThumbnailCellView: View, Equatable {
                     .frame(width: displaySize.width, height: displaySize.height)
                     .clipped()
             } else {
-                // Distinct from the strip's secondaryBackground (0.15) so empty
-                // cells read as "loading" rather than "void" while the renderer
+                // Darker than the strip's secondaryBackground so empty cells
+                // read as "loading" rather than "void" while the renderer
                 // catches up. The 1pt cell-spacing gap then shows through as
                 // a lighter divider, giving the grid a visible structure.
-                Color(white: 0.07)
+                Theme.emptyCell
                     .frame(width: displaySize.width, height: displaySize.height)
             }
         }
