@@ -9,6 +9,7 @@
 //
 
 import SwiftUI
+import AppCitizenshipKit
 
 @main
 struct ScreenshotFromVideosApp: App {
@@ -16,9 +17,23 @@ struct ScreenshotFromVideosApp: App {
     // the same instance. Single-window app — no multi-window concerns.
     @State private var vm = ExtractionViewModel()
 
-    // Sparkle updater. Plain `let` (matches the sibling apps) — canCheckForUpdates
-    // flips true almost immediately at launch, so the menu item self-enables.
-    private let updateController = UpdateController()
+    // Sparkle updater. @StateObject + the `UpdaterCommands` struct below (not an
+    // inline closure) so "Check for Updates…" re-evaluates its disabled state
+    // when `canCheckForUpdates` changes — the closure form lets it go stale.
+    @StateObject private var updateController = UpdateController()
+
+    /// App citizenship via AppCitizenshipKit (same wiring as Conjoyn):
+    /// Help › Send Feedback… (FeedbackKit → shared `feedback-submit.php`, which
+    /// gates on its `ALLOWED_APPS` list), Help › Leave a Tip (tip-jar hub,
+    /// `?app=stillsfromvideo`), and a link-rich About panel replacing the
+    /// default one. `appID` is the single slug for both feedback and tips.
+    private let citizenship = CitizenshipConfig(
+        appID: "stillsfromvideo",
+        appName: "Stills From Video",
+        accent: Theme.accent,
+        websiteURL: URL(string: "https://apps.lucesumbrarum.com/stillsfromvideo"),
+        privacyURL: URL(string: "https://apps.lucesumbrarum.com/privacy")
+    )
 
     var body: some Scene {
         WindowGroup {
@@ -29,14 +44,9 @@ struct ScreenshotFromVideosApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: 980, height: 620)
         .commands {
-            // "Check for Updates…" in the app menu, just under About — matches
-            // the sibling published apps. Disabled until Sparkle is ready.
-            CommandGroup(after: .appInfo) {
-                Button("Check for Updates…") {
-                    updateController.checkForUpdates()
-                }
-                .disabled(!updateController.canCheckForUpdates)
-            }
+            // One line for Send Feedback… + Leave a Tip + the link-rich About.
+            CitizenshipCommands(citizenship)
+            UpdaterCommands(updater: updateController)
 
             // Replace the default (non-functional) "New" item with Open
             // Video. Output-folder picking is exposed via the right-pane
@@ -52,6 +62,20 @@ struct ScreenshotFromVideosApp: App {
             }
 
             ZoomCommands()
+        }
+    }
+}
+
+/// "Check for Updates…" in the app menu, just under About — matches the
+/// sibling published apps. A `Commands` struct with `@ObservedObject` so the
+/// disabled state refreshes while Sparkle starts up or a check is in flight.
+struct UpdaterCommands: Commands {
+    @ObservedObject var updater: UpdateController
+
+    var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates\u{2026}") { updater.checkForUpdates() }
+                .disabled(!updater.canCheckForUpdates)
         }
     }
 }

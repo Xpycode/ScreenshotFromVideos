@@ -26,6 +26,10 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: "2.8.0"
+  # AppCitizenshipKit bundles Feedback (re-exports FeedbackKit) + Tip Jar + About behind one config.
+  AppCitizenshipKit:
+    url: https://github.com/Xpycode/AppCitizenshipKit
+    from: "0.1.2"
 
 targets:
   ScreenshotFromVideos:
@@ -38,6 +42,7 @@ targets:
         product: SDWebImageWebPCoder
       - package: Sparkle
         product: Sparkle
+      - package: AppCitizenshipKit
     info:
       path: ScreenshotFromVideos/Info.plist
       properties:
