@@ -9,10 +9,36 @@
 //
 
 import SwiftUI
+import AppKit
 import AppCitizenshipKit
+import HelpMenu
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Pin the whole app dark so the Help window (a standalone NSWindow
+        // that otherwise follows the system) matches the main window.
+        // Replaced by the Appearance menu when light mode lands.
+        NSApp.appearance = NSAppearance(named: .darkAqua)
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // SwiftUI maps "?" + Command to keyEquivalent "/" + Shift, which shows
+        // as Command-Shift-/. Patch it back to "?" so the menu reads
+        // Command-? and fires on it (same fix as Conjoyn).
+        if let helpMenu = NSApp.helpMenu {
+            for item in helpMenu.items where item.keyEquivalent == "/" {
+                item.keyEquivalent = "?"
+                item.keyEquivalentModifierMask = [.command]
+            }
+        }
+    }
+}
 
 @main
 struct ScreenshotFromVideosApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     // VM lives at the App level so the Commands block and ContentView share
     // the same instance. Single-window app — no multi-window concerns.
     @State private var vm = ExtractionViewModel()
@@ -35,6 +61,11 @@ struct ScreenshotFromVideosApp: App {
         privacyURL: URL(string: "https://apps.lucesumbrarum.com/privacy")
     )
 
+    /// Help content: `Help/help-manifest.json` + `help-*.md`, bundled flat into
+    /// Resources. A missing manifest falls back to an empty window, never a crash.
+    private let helpContent: HelpContent = (try? HelpContent(manifest: "help-manifest", in: .main))
+        ?? HelpContent(topics: [], windowTitle: "Stills From Video Help")
+
     var body: some Scene {
         WindowGroup {
             ContentView(vm: vm)
@@ -44,6 +75,12 @@ struct ScreenshotFromVideosApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: 980, height: 620)
         .commands {
+            // Help › Stills From Video Help (Command-?).
+            HelpMenuCommands(content: helpContent, appName: "Stills From Video")
+            // Separator between the Help item and "Send Feedback…" — its own
+            // after-.help group, declared between the two packages' groups
+            // (same-anchor groups order by declaration; cookbook #104).
+            CommandGroup(after: .help) { Divider() }
             // One line for Send Feedback… + Leave a Tip + the link-rich About.
             CitizenshipCommands(citizenship)
             UpdaterCommands(updater: updateController)

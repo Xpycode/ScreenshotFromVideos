@@ -1,0 +1,14 @@
+{
+  "windowTitle": "Stills From Video Help",
+  "topics": [
+    { "id": "what-it-does",   "title": "What Stills From Video Does", "markdownFile": "help-what-it-does.md",   "group": "Getting Started" },
+    { "id": "quick-start",    "title": "Quick Start",                 "markdownFile": "help-quick-start.md",    "group": "Getting Started" },
+    { "id": "interval-mode",  "title": "Interval Mode",               "markdownFile": "help-interval-mode.md",  "group": "Picking Frames" },
+    { "id": "manual-mode",    "title": "Manual Mode",                 "markdownFile": "help-manual-mode.md",    "group": "Picking Frames" },
+    { "id": "strip",          "title": "The Thumbnail Strip",         "markdownFile": "help-strip.md",          "group": "Picking Frames" },
+    { "id": "formats",        "title": "Formats and Quality",         "markdownFile": "help-formats.md",        "group": "Exporting" },
+    { "id": "names-and-time", "title": "Timestamps and Filenames",    "markdownFile": "help-names-and-time.md", "group": "Exporting" },
+    { "id": "shortcuts",      "title": "Keyboard Shortcuts",          "markdownFile": "help-shortcuts.md",      "group": "Reference" },
+    { "id": "troubleshooting","title": "Troubleshooting",             "markdownFile": "help-troubleshooting.md","group": "Reference" }
+  ]
+}
