@@ -1,0 +1,41 @@
+REFERENCE SET
+Attach Conjoyn, current Penumbra and QuickScreenShot images listed in README.txt.
+Use a reference-capable image-generation model. Request one image per prompt.
+
+A. FLATTER REFINEMENT OF GENERATED CANDIDATE
+Attach the candidate as the edit target and Conjoyn/Penumbra as style references.
+Refine this Stills From Video macOS icon. Keep the same composition, two-window
+filmstrip, orange extracted landscape still, inset charcoal continuous-corner plate,
+and transparent exterior. Flatten the materials: remove the luminous cream rim,
+reduce orange bloom substantially, remove metallic highlights from the filmstrip,
+and use matte graphite with a subtle edge highlight. Keep a soft contact shadow
+to separate the extracted still from the strip. Use warm orange around #E67F33.
+Simplify the landscape to two broad hills and one small sun. Preserve bold readable
+geometry at 32 pixels. No extra shapes, text, letters, numbers, play button, camera,
+arrows, sparks, glass or chrome. Deliver one square 1024-pixel PNG with genuine alpha
+outside the dark plate. Do not place the icon on a mockup or surrounding scene.
+
+B. SELECTED FRAME — SIMPLER ALTERNATIVE
+Create one macOS app icon for Stills From Video, which extracts individual images
+from video. Match the attached Conjoyn and Penumbra family: inset near-black charcoal
+squircle, warm orange #E67F33, substantial negative space, restrained soft depth.
+A short horizontal graphite filmstrip holds three chunky landscape windows. Its
+center window becomes an orange still-image tile, raised slightly forward and upward;
+the other two remain subdued. Give the orange tile only a simple dark-orange hill
+silhouette so it reads as an image. Keep the whole glyph compact and legible at
+32 pixels, with a few large sprocket holes. Matte materials, subtle contact shadow,
+very restrained warm light. No text, letters, numbers, arrows, camera, scissors,
+play triangle, glossy reflections, decorative particles, chrome or thin lines.
+Deliver one square 1024-pixel PNG, with transparent exterior outside the inset plate.
+
+C. FRAME FIRST — MINIMAL ALTERNATIVE
+Create one restrained macOS app icon for extracting still frames from video.
+Use attached Conjoyn/Penumbra images as family references only. On an inset charcoal
+squircle, show one dominant warm-orange landscape image tile with a dark minimal
+two-hill silhouette inside. A short, subdued graphite filmstrip passes behind its
+lower edge, making the orange tile read as one still extracted from a sequence.
+Large confident geometry, warm orange #E67F33, generous margins, subtle contact
+shadow, mostly flat matte surfaces, very little glow. Front-facing with slight
+lift to the orange still. No capture brackets, text, letters, numbers, play button,
+camera, arrows, scissors, metallic bevels, glass, particles or photographic scenery.
+Deliver one square 1024-pixel PNG with transparent exterior outside the inset plate.
