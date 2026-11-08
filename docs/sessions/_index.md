@@ -2,6 +2,7 @@
 
 | Date | Focus |
 |------|-------|
+| [2026-11-07](2026-11-07.md) | Pre-clear handoff: compact footer and native tooltip checks accepted, separate local checkpoint complete. Next suggested task: selected icon integration; 6 Backlog / 1 Inbox preserved. |
 | [2026-11-06](2026-11-06.md) | Strict rebuild/launch and confirmed CPU samples; independent review and performance closeout complete. Plan archived: 14 completed, one reverted. Separate compact-footer/native-tooltip follow-up also user-accepted after strict build. |
 | [2026-11-02](2026-11-02.md) | Wave 4 resumed: progressive-refresh criterion revised by user decision; accepted artifact verified; current-build CPU collector ready, awaiting user setup. 12/15 complete, one reverted; performance closeout remains. |
 | [2026-11-01](2026-11-01.md) | Fixed measured demand and bounded decoder retry; tests/review/build and all manual checks pass. Authorized launch verified. Task 4.1 complete; performance evidence/batch-count closeout remains. 12/15 complete, one reverted. |
