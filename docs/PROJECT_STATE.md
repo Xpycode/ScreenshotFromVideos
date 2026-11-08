@@ -11,13 +11,14 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 
 ## Now
 - **Phase:** polish after the completed strip/player performance pass.
-- **Focus:** choose the next backlog item; selected icon integration is the recommended candidate.
+- **Focus:** app-citizenship pass — (1) icon ✅ installed 2026-11-08; next (2) Feedback + Leave a Tip + About via AppCitizenshipKit and Update-menu fix, (3) Help menu + pages, (4) Appearance menu + light-mode Theme.
 - **Plan:** none active; [performance archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) records 14 completed tasks and one reverted experiment.
 - **Blockers:** none for the completed performance and footer work.
-- **Next:** choose the next backlog item; selected app icon integration is ready to consider. Run `/check ship` before release.
+- **Next:** step 2 — AppCitizenshipKit (app ID `stillsfromvideo`; server allow-list + tip-jar registration are user steps). Run `/check ship` before release.
 - **Current handoff:** [2026-11-07 pre-clear Resume](sessions/2026-11-07.md#resume).
 
 ## Recent
+- **2026-11-08** — Merged the performance branch into main and pushed. Installed the v3 stacked app icon, scaled to match sibling icons in the Dock (835 px body on a 1024 px canvas), all 10 sizes; build verified.
 - **2026-11-07** — Pre-clear handoff saved: footer accepted and committed locally; next suggested work is selected icon integration.
 - **2026-11-06** — Fresh build and user-confirmed CPU samples complete; independent review found no source defect. Performance plan archived with 14 completed tasks and one reverted experiment. Compact footer/native hover tips also user-accepted after strict build.
 - **2026-11-02** — Resumed Wave 4; user retained progressive fill and revised refresh criterion. Accepted source/artifact checksums match; current-artifact CPU collector prepared.
@@ -26,7 +27,7 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 
 ## Backlog (none blocking)
 - **Perf tuning ideas:** raise default zoom 1.0 → ~3 for a friendlier first view; re-tune prefetch pads for the grid layout; tune the 256 in-flight decode cap per hardware.
-- **Polish queue:** notarized DMG for distribution; install selected [stacked app icon v3](../02_Design/Icon-2026-10-28/stills-from-video-candidate-v3-1024.png) and generate all icon sizes (design accepted, not yet installed); optional diagnostic logging.
+- **Polish queue:** notarized DMG for distribution; optional diagnostic logging.
 - **Light-mode toggle (deferred):** app is hard-coded `.preferredColorScheme(.dark)`. Plan: `@AppStorage("colorScheme")` (system/light/dark) → `.preferredColorScheme(...)` in the app shell; for true per-scheme colors, `Theme` must become an `EnvironmentKey`-backed struct (see `decisions.md` §4).
 
 ## Infrastructure
