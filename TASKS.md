@@ -14,7 +14,7 @@ None. Compact footer and native hover tooltips accepted November 6; strict build
 - At every-frame zoom, playback can reach uncached thumbnails and show black cells. User accepted this as a deferred limitation on 2026-10-28; eventual fill after pausing was not explicitly confirmed in that final check. The separately promoted paused slider-zoom failure (2026-10-29) was fixed by measured demand plus bounded decode retry and user-passed on 2026-11-01 (task 4.1). Retain this older playback catch-up limitation separately; do not reopen the accepted paused-fill case.
 - Continuous zoom density produces mostly distinct timestamp cache keys; consider a reusable sampling ladder only if further performance work is requested.
 
-- External app-citizenship setup (2026-11-08, user-operated): add `stillsfromvideo` to `ALLOWED_APPS` in `feedback-submit.php` and register it on the tip-jar page; `apps.lucesumbrarum.com/stillsfromvideo` and `/privacy` (About-panel links) return 404 — Conjoyn shares the privacy gap.
+- About-panel Website link: `apps.lucesumbrarum.com/stillsfromvideo` 404s until the app gets a portal page at release (its `apps.json` row is `portalPage: false`). Feedback and tips already work: both read the live `apps.json` roster, which lists `stillsfromvideo`. `/privacy` fixed 2026-11-09 (App-Websites `89a8fc0`).
 
 ## Inbox
 - Existing zoom-out redraw slowness: distinguish cache eviction from never-cached frames (see archived performance plan’s July 19 evidence).
