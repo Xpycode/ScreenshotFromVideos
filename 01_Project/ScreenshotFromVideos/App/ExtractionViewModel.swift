@@ -272,11 +272,11 @@ final class ExtractionViewModel {
         job = Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                let urls = try await ExtractionPipeline.run(request) { update in
+                let outcome = try await ExtractionPipeline.run(request) { update in
                     self.progress = update
                 }
-                self.lastExportedURLs = urls
-                self.statusMessage = "Done — wrote \(urls.count) \(request.format.rawValue)\(urls.count == 1 ? "" : "s")"
+                self.lastExportedURLs = outcome.written
+                self.reportOutcome(outcome, format: request.format.rawValue)
             } catch is CancellationError {
                 self.statusMessage = "Cancelled — partial frames remain on disk"
             } catch {
@@ -290,6 +290,23 @@ final class ExtractionViewModel {
 
     func cancel() {
         job?.cancel()
+    }
+
+    /// Status line for a finished run. Never says "Done" when frames were
+    /// lost: partial failure names the shortfall, total failure is an error.
+    private func reportOutcome(_ outcome: ExtractionPipeline.Outcome, format: String) {
+        let n = outcome.written.count
+        let noun = "\(format)\(n == 1 ? "" : "s")"
+        let reason = outcome.firstFailure.map { " (\($0))" } ?? ""
+        if outcome.failedCount == 0 {
+            statusMessage = "Done — wrote \(n) \(noun)"
+        } else if n == 0 {
+            let message = "No frames written — all \(outcome.failedCount) failed\(reason)"
+            lastError = message
+            statusMessage = "Failed: \(message)"
+        } else {
+            statusMessage = "Done — wrote \(n) of \(outcome.total) \(noun), \(outcome.failedCount) failed\(reason)"
+        }
     }
 
     /// Reveal the most recent export in Finder, selecting the written files.

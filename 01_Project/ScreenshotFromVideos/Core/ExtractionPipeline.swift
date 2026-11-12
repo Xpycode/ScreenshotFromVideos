@@ -6,9 +6,12 @@
 //  AVAssetImageGenerator.images(for:), optionally overlays a timestamp,
 //  optionally numbers the filename, and writes each as PNG.
 //
-//  Per-frame failures inside the AsyncSequence are logged and skipped — they
-//  don't abort the batch. Task cancellation triggers cancelAllCGImageGeneration
-//  and leaves already-written PNGs on disk.
+//  The output folder is checked up front (missing / not a folder / not
+//  writable → `ExtractionError.outputFolderUnavailable`, before any decode).
+//  Per-frame failures inside the AsyncSequence are counted and skipped — they
+//  don't abort the batch — and reported back in `Outcome` so the UI never
+//  claims a clean run that wasn't. Task cancellation triggers
+//  cancelAllCGImageGeneration and leaves already-written files on disk.
 //
 
 import Foundation
@@ -23,6 +26,38 @@ enum ExtractionPipeline {
         let lastWritten: URL?
     }
 
+    /// What a finished (non-cancelled) run produced. `failedCount` covers both
+    /// decode and write failures; `firstFailure` is the first one's message.
+    struct Outcome: Sendable {
+        let written: [URL]
+        let total: Int
+        let failedCount: Int
+        let firstFailure: String?
+    }
+
+    enum ExtractionError: LocalizedError {
+        case outputFolderUnavailable(name: String)
+
+        var errorDescription: String? {
+            switch self {
+            case .outputFolderUnavailable(let name):
+                return "Output folder \u{201C}\(name)\u{201D} is missing or not writable — choose another folder."
+            }
+        }
+    }
+
+    /// Fails fast when the persisted output folder was deleted, unmounted or
+    /// made read-only since it was picked — otherwise every write would fail.
+    static func validateOutputFolder(_ folder: URL) throws {
+        var isDirectory: ObjCBool = false
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: folder.path, isDirectory: &isDirectory),
+              isDirectory.boolValue,
+              fm.isWritableFile(atPath: folder.path) else {
+            throw ExtractionError.outputFolderUnavailable(name: folder.lastPathComponent)
+        }
+    }
+
     /// AVAssetImageGenerator is non-Sendable, but cancelAllCGImageGeneration()
     /// is thread-safe per Apple DTS — wrap only for the @Sendable onCancel hop.
     private struct CancellableGenerator: @unchecked Sendable {
@@ -32,7 +67,10 @@ enum ExtractionPipeline {
     static func run(
         _ request: ExtractionRequest,
         onProgress: @escaping @MainActor (Progress) -> Void
-    ) async throws -> [URL] {
+    ) async throws -> Outcome {
+        // 0. Output folder — before spending any time decoding.
+        try validateOutputFolder(request.outputFolder)
+
         // 1. Metadata — also surfaces "no video track" as a typed error early.
         let metadata = try await VideoMetadataLoader.load(request.sourceURL)
 
@@ -42,7 +80,9 @@ enum ExtractionPipeline {
             duration: metadata.duration,
             fps: metadata.nominalFrameRate
         )
-        guard !times.isEmpty else { return [] }
+        guard !times.isEmpty else {
+            return Outcome(written: [], total: 0, failedCount: 0, firstFailure: nil)
+        }
 
         // 3. Build the generator.
         let asset = AVURLAsset(url: request.sourceURL)
@@ -55,6 +95,13 @@ enum ExtractionPipeline {
         // 4. Consume images(for:) with cooperative cancellation.
         return try await withTaskCancellationHandler {
             var written: [URL] = []
+            var failedCount = 0
+            var firstFailure: String?
+
+            func recordFailure(_ error: Error) {
+                failedCount += 1
+                if firstFailure == nil { firstFailure = error.localizedDescription }
+            }
 
             for try await result in generator.images(for: times) {
                 try Task.checkCancellation()
@@ -111,21 +158,25 @@ enum ExtractionPipeline {
                     }
                     if let writeError {
                         print("write failed for \(url.lastPathComponent): \(writeError)")
+                        recordFailure(writeError)
+                        await onProgress(Progress(completed: written.count + failedCount, total: total, lastWritten: written.last))
                         continue
                     }
 
                     written.append(url)
-                    let progress = Progress(completed: written.count, total: total, lastWritten: url)
+                    let progress = Progress(completed: written.count + failedCount, total: total, lastWritten: url)
                     await onProgress(progress)
 
                 case .failure(requestedTime: let requested, error: let error):
-                    // Per-frame failure — log and continue, mirroring CropBatch's
-                    // partial-batch tolerance.
+                    // Per-frame failure — count and continue, mirroring CropBatch's
+                    // partial-batch tolerance; reported in the Outcome.
                     print("frame failed at \(CMTimeGetSeconds(requested))s: \(error)")
+                    recordFailure(error)
+                    await onProgress(Progress(completed: written.count + failedCount, total: total, lastWritten: written.last))
                 }
             }
 
-            return written
+            return Outcome(written: written, total: total, failedCount: failedCount, firstFailure: firstFailure)
         } onCancel: {
             cancelBox.raw.cancelAllCGImageGeneration()
         }

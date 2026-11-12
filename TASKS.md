@@ -1,7 +1,12 @@
 # Tasks
 
 ## Active plan
-None. [Strip/player performance completed](docs/sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) November 6: 14 tasks complete, one reverted; evidence limitations retained.
+**v0.1 release** (from `/check ship`, 2026-11-09). Done-for-v0.1 criteria live in `docs/PROJECT_STATE.md`.
+- [ ] **Report export failures (#4)** — *implemented 2026-11-09 (`ExtractionPipeline.Outcome` + folder pre-check); awaiting user test, see [Resume](docs/sessions/2026-11-12.md#resume).* Per-frame decode/write failures are only `print`ed and skipped; status still says "Done — wrote N" (`Core/ExtractionPipeline.swift:113,124`, `App/ExtractionViewModel.swift:279`). A stale persisted output folder would yield "Done — wrote 0" with no error. Surface failed count / first error; validate the output folder before starting. Found by code reading, not runtime-reproduced.
+- [ ] **About Website link (#6).** `apps.lucesumbrarum.com/stillsfromvideo` 404s (`apps.json` row `portalPage: false`). Publish the portal page, or drop `websiteURL` for v0.1. Feedback, tips and `/privacy` already work.
+- [ ] **Notarized DMG (gate 1).** Build from the release commit via `scripts/release.sh`; record source commit.
+- [ ] **Sparkle-signed appcast item (gate 2).** Needs the Mac holding the `o388…` key (`release.sh` refuses on this Mac) — or explicitly ship v0.1 without auto-update.
+- [ ] **Artifact smoke test (gate 3).** Install the signed DMG on a clean account/fresh prefs; run Interval and Manual exports and check frame counts.
 
 ## Standalone follow-up
 None. Compact footer and native hover tooltips accepted November 6; strict build and all finite user checks passed. See [evidence](docs/validation/window-width-2026-10-29/README.md).
@@ -14,7 +19,13 @@ None. Compact footer and native hover tooltips accepted November 6; strict build
 - At every-frame zoom, playback can reach uncached thumbnails and show black cells. User accepted this as a deferred limitation on 2026-10-28; eventual fill after pausing was not explicitly confirmed in that final check. The separately promoted paused slider-zoom failure (2026-10-29) was fixed by measured demand plus bounded decode retry and user-passed on 2026-11-01 (task 4.1). Retain this older playback catch-up limitation separately; do not reopen the accepted paused-fill case.
 - Continuous zoom density produces mostly distinct timestamp cache keys; consider a reusable sampling ladder only if further performance work is requested.
 
-- About-panel Website link: `apps.lucesumbrarum.com/stillsfromvideo` 404s until the app gets a portal page at release (its `apps.json` row is `portalPage: false`). Feedback and tips already work: both read the live `apps.json` roster, which lists `stillsfromvideo`. `/privacy` fixed 2026-11-09 (App-Websites `89a8fc0`).
+- [v1.1] Diagnostic logging (#5): replace the 3 production `print()` calls (`ExtractionPipeline.swift:113,124`, `ThumbnailRenderer.swift:69`) with `Logger`; no `os.Logger` exists yet.
+- [v1.1] CHANGELOG / release notes (#7): none exists; write v0.1 notes for the appcast item and GitHub release (do this alongside the DMG).
+- [v1.1] Split `Thumbnail/ThumbnailStripView.swift` (720 lines, over the 500 guideline) (#8).
+- [v1.1] Command-Comma opens nothing — no Settings scene; arguably correct since settings live in the inspector (#9). Decide, don't build by default.
+- [v1.1] Build-number scheme (#10): currently `CURRENT_PROJECT_VERSION: "1"`; house scheme would be e.g. 100 for v0.1. Decide before the first appcast item — numbers only go up.
+- [v1.1] Add a justification comment to `CancellableGenerator` `@unchecked Sendable` in `Thumbnail/ThumbnailRenderer.swift:16` (pipeline copy has one) (#11).
+- [v1.1] Delete the unused `Assets.xcassets/AppIcon.appiconset` — the app icon is now `02_Design/StillsFromVideos-icon.icon` (2026-11-12).
 
 ## Inbox
 - Existing zoom-out redraw slowness: distinguish cache eviction from never-cached frames (see archived performance plan’s July 19 evidence).
