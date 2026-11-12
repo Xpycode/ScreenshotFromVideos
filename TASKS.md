@@ -2,7 +2,7 @@
 
 ## Active plan
 **v0.1 release** (from `/check ship`, 2026-11-09). Done-for-v0.1 criteria live in `docs/PROJECT_STATE.md`.
-- [ ] **Report export failures (#4)** — *implemented 2026-11-09 (`ExtractionPipeline.Outcome` + folder pre-check); awaiting user test, see [Resume](docs/sessions/2026-11-12.md#resume).* Per-frame decode/write failures are only `print`ed and skipped; status still says "Done — wrote N" (`Core/ExtractionPipeline.swift:113,124`, `App/ExtractionViewModel.swift:279`). A stale persisted output folder would yield "Done — wrote 0" with no error. Surface failed count / first error; validate the output folder before starting. Found by code reading, not runtime-reproduced.
+- [x] **Report export failures (#4)** — implemented 2026-11-09 (`ExtractionPipeline.Outcome` + output-folder pre-check); **user-passed 2026-11-12**: normal export, deleted folder, read-only folder (Manual mode). Partial-failure wording verified by code reading only.
 - [ ] **About Website link (#6).** `apps.lucesumbrarum.com/stillsfromvideo` 404s (`apps.json` row `portalPage: false`). Publish the portal page, or drop `websiteURL` for v0.1. Feedback, tips and `/privacy` already work.
 - [ ] **Notarized DMG (gate 1).** Build from the release commit via `scripts/release.sh`; record source commit.
 - [ ] **Sparkle-signed appcast item (gate 2).** Needs the Mac holding the `o388…` key (`release.sh` refuses on this Mac) — or explicitly ship v0.1 without auto-update.

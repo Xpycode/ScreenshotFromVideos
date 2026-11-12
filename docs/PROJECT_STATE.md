@@ -1,6 +1,6 @@
 # PROJECT_STATE — ScreenshotFromVideos
 
-*Last updated: 2026-11-12 — pre-clear handoff; `/check ship` done, export-failure fix built (user test pending), Icon Composer icon wired in.*
+*Last updated: 2026-11-12 — pre-clear handoff; `/check ship` done, export-failure fix and Icon Composer icon user-passed.*
 
 ## Identity
 macOS app that extracts still frames from a video as PNGs — every Nth frame or hand-picked timestamps — with optional timestamp burn-in and chronological filename numbering. Built to feed Claude Code visual context from screen recordings. Also exports JPG / HEIC / WebP.
@@ -11,20 +11,20 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 
 ## Now
 - **Phase:** shipping — v0.1 release prep. <!-- Phase changed: 2026-11-12 -->
-- **Focus:** v0.1 release. Ship check found 0 code blockers; export-failure fix (#4) is built and awaiting the user test.
+- **Focus:** v0.1 release. Ship check found 0 code blockers; export-failure fix (#4) and new Dock icon user-passed 2026-11-12.
 - **Plan:** v0.1 release — see `TASKS.md` Active plan (from `/check ship` 2026-11-09). Prior: [performance archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) records 14 completed tasks and one reverted experiment.
 - **Blockers:** none for the completed performance and footer work.
-- **Next:** user-test #4 (steps in the Resume), resolve the About Website link, then cut the notarized DMG on the Mac holding the Sparkle key.
+- **Next:** resolve the About Website link, then cut the notarized DMG on the Mac holding the Sparkle key.
 - **Done for v0.1** (proposed by `/check ship` 2026-11-09; 0 code ship-blockers, 3 release gates not run):
   - [ ] A notarized, stapled DMG built from the release commit installs and runs on a clean account
-  - [ ] Interval and Manual exports write the expected frame count, and failures are reported to the user
+  - [ ] Interval and Manual exports write the expected frame count, and failures are reported to the user *(failure reporting + Manual passed 2026-11-12; Interval to confirm in the DMG smoke test)*
   - [ ] The appcast has a Sparkle-signed v0.1 item, or v0.1 is explicitly released without auto-update
   - [ ] The About Website link resolves, or is removed for v0.1
   - Everything else → v1.1.
 - **Current handoff:** [2026-11-12 pre-clear Resume](sessions/2026-11-12.md#resume).
 
 ## Recent
-- **2026-11-12** — Ship check: no code blockers, release steps still to run. Built a fix so failed or missing-folder exports are reported honestly (awaiting test), and switched the app icon to an Icon Composer file so the Dock no longer shows it on a grey tile.
+- **2026-11-12** — Ship check: no code blockers, release steps still to run. Built a fix so failed or missing-folder exports are reported honestly (user-passed), and switched the app icon to an Icon Composer file so the Dock no longer shows it on a grey tile.
 - **2026-11-09** — Appearance menu (Match System / Light / Dark) with a full light theme, user-accepted. Found feedback and tips already working; published a shared privacy page the apps' About panels link to, and fixed Magpie's wrong feedback-privacy claim.
 - **2026-11-08** — App-citizenship pass: Feedback/Tip/About (AppCitizenshipKit), Help menu (vendored HelpMenu + 9 topics, Command-?), `.app` renamed to "Stills From Video.app" (internal IDs kept). Merged the performance branch into main and pushed. Installed the v3 stacked app icon, scaled to match sibling icons in the Dock (835 px body on a 1024 px canvas), all 10 sizes; build verified.
 - **2026-11-07** — Pre-clear handoff saved: footer accepted and committed locally; next suggested work is selected icon integration.
