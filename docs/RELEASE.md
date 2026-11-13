@@ -39,8 +39,8 @@ last edited on does **not** have that key.
 ### 1. Bump versions (in `01_Project/project.yml`)
 
 ```yaml
-MARKETING_VERSION: "0.2"        # the human version
-CURRENT_PROJECT_VERSION: "2"    # MUST increase every release — Sparkle compares this
+MARKETING_VERSION: "1.1"        # the human version
+CURRENT_PROJECT_VERSION: "1100" # MUST increase every release — Sparkle compares this (house scheme: v1.1 → 1100, v1.0.1 → 1010)
 ```
 
 ⚠️ **If you forget to bump `CURRENT_PROJECT_VERSION`, Sparkle won't offer the
@@ -52,7 +52,7 @@ Commit the bump.
 
 ```bash
 ./scripts/release.sh            # reads the version from project.yml
-# or: ./scripts/release.sh 0.2
+# or: ./scripts/release.sh 1.1
 ```
 
 This regenerates the project, archives, exports Developer ID, builds
@@ -83,9 +83,10 @@ whatever is on `main`.
 
 ---
 
-## First release (v0.1) specifics
+## First release (v1.0) specifics
 
-- `CURRENT_PROJECT_VERSION` is already `1` → the v0.1 appcast item uses
-  `sparkle:version=1` (release.sh fills this from the built app).
-- v0.1 ships *with* the updater already embedded, so v0.2 will be the first
-  auto-update users receive.
+- Versioned 1.0 / build `1000` (house scheme; changed from the never-shipped
+  0.1 / build 1 on 2026-11-13) → the v1.0 appcast item uses
+  `sparkle:version=1000` (release.sh fills this from the built app).
+- v1.0 ships *with* the updater already embedded, so the next release
+  (e.g. v1.0.1 = 1010 or v1.1 = 1100) will be the first auto-update users receive.

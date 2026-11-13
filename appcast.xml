@@ -14,13 +14,13 @@
              increase every release, or Sparkle won't offer the update.
 
         <item>
-            <title>Version 0.1</title>
+            <title>Version 1.0</title>
             <pubDate>Thu, 12 Jun 2026 12:00:00 +0200</pubDate>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>0.1</sparkle:shortVersionString>
+            <sparkle:version>1000</sparkle:version>
+            <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/Xpycode/ScreenshotFromVideos/releases/download/v0.1/StillsFromVideo-0.1.dmg"
+                url="https://github.com/Xpycode/ScreenshotFromVideos/releases/download/v1.0/StillsFromVideo-1.0.dmg"
                 sparkle:edSignature="PASTE_FROM_sign_update"
                 length="PASTE_FROM_sign_update"
                 type="application/octet-stream"

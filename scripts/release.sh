@@ -6,7 +6,7 @@ set -e
 # and a notarytool keychain profile (see docs/RELEASE.md).
 #
 # Usage: ./scripts/release.sh [version]
-# Example: ./scripts/release.sh 0.1
+# Example: ./scripts/release.sh 1.0
 #
 # Produces a notarized, stapled, Sparkle-signed DMG in ./releases/ and prints
 # the appcast.xml <item> to paste in.
@@ -153,6 +153,6 @@ echo "=== Next steps ==="
 echo "1. Paste the <item> above into appcast.xml (newest first), commit + push to main."
 echo "2. Create GitHub Release v$VERSION on Xpycode/ScreenshotFromVideos."
 echo "3. Upload releases/$DMG_NAME to that release."
-echo "4. Done — installed v0.1 apps will see the next release via the feed."
+echo "4. Done — installed apps will see the next release via the feed."
 echo ""
 echo "✅ Release build complete!"

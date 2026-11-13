@@ -1,11 +1,11 @@
 # Tasks
 
 ## Active plan
-**v0.1 release** (from `/check ship`, 2026-11-09). Done-for-v0.1 criteria live in `docs/PROJECT_STATE.md`.
+**v1.0 release** (from `/check ship`, 2026-11-09). Done-for-v1.0 criteria live in `docs/PROJECT_STATE.md`.
 - [x] **Report export failures (#4)** — implemented 2026-11-09 (`ExtractionPipeline.Outcome` + output-folder pre-check); **user-passed 2026-11-12**: normal export, deleted folder, read-only folder (Manual mode). Partial-failure wording verified by code reading only.
-- [ ] **About Website link (#6).** `apps.lucesumbrarum.com/stillsfromvideo` 404s (`apps.json` row `portalPage: false`). Publish the portal page, or drop `websiteURL` for v0.1. Feedback, tips and `/privacy` already work.
+- [ ] **About Website link (#6).** `apps.lucesumbrarum.com/stillsfromvideo` 404s (`apps.json` row `portalPage: false`). Publish the portal page, or drop `websiteURL` for v1.0. Feedback, tips and `/privacy` already work.
 - [ ] **Notarized DMG (gate 1).** Build from the release commit via `scripts/release.sh`; record source commit.
-- [ ] **Sparkle-signed appcast item (gate 2).** Needs the Mac holding the `o388…` key (`release.sh` refuses on this Mac) — or explicitly ship v0.1 without auto-update.
+- [ ] **Sparkle-signed appcast item (gate 2).** Needs the Mac holding the `o388…` key (`release.sh` refuses on this Mac) — or explicitly ship v1.0 without auto-update.
 - [ ] **Artifact smoke test (gate 3).** Install the signed DMG on a clean account/fresh prefs; run Interval and Manual exports and check frame counts.
 
 ## Standalone follow-up
@@ -20,10 +20,9 @@ None. Compact footer and native hover tooltips accepted November 6; strict build
 - Continuous zoom density produces mostly distinct timestamp cache keys; consider a reusable sampling ladder only if further performance work is requested.
 
 - [v1.1] Diagnostic logging (#5): replace the 3 production `print()` calls (`ExtractionPipeline.swift:113,124`, `ThumbnailRenderer.swift:69`) with `Logger`; no `os.Logger` exists yet.
-- [v1.1] CHANGELOG / release notes (#7): none exists; write v0.1 notes for the appcast item and GitHub release (do this alongside the DMG).
+- [v1.1] CHANGELOG / release notes (#7): none exists; write v1.0 notes for the appcast item and GitHub release (do this alongside the DMG).
 - [v1.1] Split `Thumbnail/ThumbnailStripView.swift` (720 lines, over the 500 guideline) (#8).
 - [v1.1] Command-Comma opens nothing — no Settings scene; arguably correct since settings live in the inspector (#9). Decide, don't build by default.
-- [v1.1] Build-number scheme (#10): currently `CURRENT_PROJECT_VERSION: "1"`; house scheme would be e.g. 100 for v0.1. Decide before the first appcast item — numbers only go up.
 - [v1.1] Add a justification comment to `CancellableGenerator` `@unchecked Sendable` in `Thumbnail/ThumbnailRenderer.swift:16` (pipeline copy has one) (#11).
 - [v1.1] Delete the unused `Assets.xcassets/AppIcon.appiconset` — the app icon is now `02_Design/StillsFromVideos-icon.icon` (2026-11-12).
 

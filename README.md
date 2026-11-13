@@ -5,7 +5,7 @@ A macOS app that extracts frames from a video as images — every Nth frame, eve
 ![macOS](https://img.shields.io/badge/macOS-15.0+-blue.svg)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Version](https://img.shields.io/badge/version-0.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-1.0-brightgreen.svg)
 [![Download](https://img.shields.io/badge/Download-latest-blue.svg)](https://github.com/Xpycode/ScreenshotFromVideos/releases/latest)
 ![Downloads](https://img.shields.io/github/downloads/Xpycode/ScreenshotFromVideos/total.svg)
 
@@ -38,7 +38,7 @@ Claude Code (and most LLMs) can't read video. When you want to show what's happe
 
 ## Installation
 
-1. Download `StillsFromVideo-0.1.dmg` from [Releases](https://github.com/Xpycode/ScreenshotFromVideos/releases/latest)
+1. Download `StillsFromVideo-1.0.dmg` from [Releases](https://github.com/Xpycode/ScreenshotFromVideos/releases/latest)
 2. Open the DMG and drag **Stills From Video** to Applications
 3. Launch from the Applications folder
 

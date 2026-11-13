@@ -10,16 +10,16 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 - **Packages:** adopt MediaKit + FolderAccessKit · source for MediaKit + ImageIOKit — see `docs/PACKAGE-NOTES.md`.
 
 ## Now
-- **Phase:** shipping — v0.1 release prep. <!-- Phase changed: 2026-11-12 -->
-- **Focus:** v0.1 release. Ship check found 0 code blockers; export-failure fix (#4) and new Dock icon user-passed 2026-11-12.
-- **Plan:** v0.1 release — see `TASKS.md` Active plan (from `/check ship` 2026-11-09). Prior: [performance archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) records 14 completed tasks and one reverted experiment.
+- **Phase:** shipping — v1.0 release prep. <!-- Phase changed: 2026-11-12 -->
+- **Focus:** v1.0 release (renumbered from the never-shipped 0.1 on 2026-11-13; build 1000). Ship check found 0 code blockers; export-failure fix (#4) and new Dock icon user-passed 2026-11-12.
+- **Plan:** v1.0 release — see `TASKS.md` Active plan (from `/check ship` 2026-11-09). Prior: [performance archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) records 14 completed tasks and one reverted experiment.
 - **Blockers:** none for the completed performance and footer work.
 - **Next:** resolve the About Website link, then cut the notarized DMG on the Mac holding the Sparkle key.
-- **Done for v0.1** (proposed by `/check ship` 2026-11-09; 0 code ship-blockers, 3 release gates not run):
+- **Done for v1.0** (proposed by `/check ship` 2026-11-09; 0 code ship-blockers, 3 release gates not run):
   - [ ] A notarized, stapled DMG built from the release commit installs and runs on a clean account
   - [ ] Interval and Manual exports write the expected frame count, and failures are reported to the user *(failure reporting + Manual passed 2026-11-12; Interval to confirm in the DMG smoke test)*
-  - [ ] The appcast has a Sparkle-signed v0.1 item, or v0.1 is explicitly released without auto-update
-  - [ ] The About Website link resolves, or is removed for v0.1
+  - [ ] The appcast has a Sparkle-signed v1.0 item, or v1.0 is explicitly released without auto-update
+  - [ ] The About Website link resolves, or is removed for v1.0
   - Everything else → v1.1.
 - **Current handoff:** [2026-11-12 pre-clear Resume](sessions/2026-11-12.md#resume).
 
@@ -36,7 +36,7 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 
 ## Infrastructure
 - **Remote:** public GitHub `origin` → https://github.com/Xpycode/ScreenshotFromVideos (`main` tracking).
-- **Signing on this Mac:** holds the Developer ID cert `GREGOR MÜLLER (FDMSRXXN73)` (can notarize a v0.1 DMG) but NOT the Sparkle `o388…` auto-update private key — so `scripts/release.sh` refuses here; an auto-update release must be cut on the Mac holding `o388…`. Local dev builds need ad-hoc signing (`CODE_SIGN_IDENTITY="-"`) — no Apple Development cert here. Bump `CURRENT_PROJECT_VERSION` every release.
+- **Signing on this Mac:** holds the Developer ID cert `GREGOR MÜLLER (FDMSRXXN73)` (can notarize a DMG) but NOT the Sparkle `o388…` auto-update private key — so `scripts/release.sh` refuses here; an auto-update release must be cut on the Mac holding `o388…`. Local dev builds need ad-hoc signing (`CODE_SIGN_IDENTITY="-"`) — no Apple Development cert here. Bump `CURRENT_PROJECT_VERSION` every release (house scheme: 1.0 → 1000, 1.1 → 1100).
 - **Build:** xcodegen drives the `.xcodeproj` from `01_Project/project.yml`; run `cd 01_Project && xcodegen generate` after adding/moving any `.swift` file.
 
 ## Detail (read only if needed)
