@@ -14,11 +14,11 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 - **Focus:** v1.0 release (renumbered from the never-shipped 0.1 on 2026-11-13; build 1000). Ship check found 0 code blockers; export-failure fix (#4) and new Dock icon user-passed 2026-11-12.
 - **Plan:** v1.0 release — see `TASKS.md` Active plan (from `/check ship` 2026-11-09). Prior: [performance archive](sessions/_archive/2026-11-06_STRIP_PLAYER_PERFORMANCE_PLAN.md) records 14 completed tasks and one reverted experiment.
 - **Blockers:** none for the completed performance and footer work.
-- **Next:** decide + resolve the About Website link (publish portal page or remove), then cut the notarized DMG on the Mac holding the Sparkle key.
+- **Next:** v1.0 is published (GitHub Release `v1.0` + appcast, 2026-11-13). Remaining: clean-account smoke test with an Interval export; portal page `stillsfromvideo` (being built in AppWebsites).
 - **Done for v1.0** (proposed by `/check ship` 2026-11-09; 0 code ship-blockers, 3 release gates not run):
-  - [ ] A notarized, stapled DMG built from the release commit installs and runs on a clean account
+  - [x] A notarized, stapled DMG built from the release commit installs and runs on a clean account
   - [ ] Interval and Manual exports write the expected frame count, and failures are reported to the user *(failure reporting + Manual passed 2026-11-12; Interval to confirm in the DMG smoke test)*
-  - [ ] The appcast has a Sparkle-signed v1.0 item, or v1.0 is explicitly released without auto-update
+  - [x] The appcast has a Sparkle-signed v1.0 item, or v1.0 is explicitly released without auto-update
   - [ ] The About Website link resolves, or is removed for v1.0
   - Everything else → v1.1.
 - **Current handoff:** [2026-11-13 pre-clear Resume](sessions/2026-11-12.md#resume-2026-11-13-pre-clear).

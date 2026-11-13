@@ -4,8 +4,8 @@
 **v1.0 release** (from `/check ship`, 2026-11-09). Done-for-v1.0 criteria live in `docs/PROJECT_STATE.md`.
 - [x] **Report export failures (#4)** — implemented 2026-11-09 (`ExtractionPipeline.Outcome` + output-folder pre-check); **user-passed 2026-11-12**: normal export, deleted folder, read-only folder (Manual mode). Partial-failure wording verified by code reading only.
 - [ ] **About Website link (#6).** `apps.lucesumbrarum.com/stillsfromvideo` 404s (`apps.json` row `portalPage: false`). Publish the portal page, or drop `websiteURL` for v1.0. Feedback, tips and `/privacy` already work.
-- [ ] **Notarized DMG (gate 1).** Build from the release commit via `scripts/release.sh`; record source commit.
-- [ ] **Sparkle-signed appcast item (gate 2).** Needs the Mac holding the `eH6j…` key (`release.sh` refuses on this Mac) — or explicitly ship v1.0 without auto-update.
+- [x] **Notarized DMG (gate 1).** Released 2026-11-13 from `ef9cf50` (tag `v1.0`) on the M1 Max; notarization Accepted, stapled, app passes Gatekeeper.
+- [x] **Sparkle-signed appcast item (gate 2).** Signed with `eH6j…` (key switched 2026-11-13); live on `main`.
 - [ ] **Artifact smoke test (gate 3).** Install the signed DMG on a clean account/fresh prefs; run Interval and Manual exports and check frame counts.
 
 ## Standalone follow-up
