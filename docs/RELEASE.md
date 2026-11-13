@@ -69,6 +69,7 @@ whatever is on `main`.
 ### 4. Publish the GitHub Release
 
 - Tag `v<version>` on `Xpycode/ScreenshotFromVideos`.
+- Release body: paste that version's section from `CHANGELOG.md`.
 - Upload `releases/StillsFromVideo-<version>.dmg` — the filename **must match**
   the `enclosure url` in the appcast item.
 - Publishing the release makes the README download badges + the GitHub download

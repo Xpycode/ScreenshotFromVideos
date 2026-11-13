@@ -20,7 +20,7 @@ None. Compact footer and native hover tooltips accepted November 6; strict build
 - Continuous zoom density produces mostly distinct timestamp cache keys; consider a reusable sampling ladder only if further performance work is requested.
 
 - [v1.1] Diagnostic logging (#5): replace the 3 production `print()` calls (`ExtractionPipeline.swift:113,124`, `ThumbnailRenderer.swift:69`) with `Logger`; no `os.Logger` exists yet.
-- [v1.1] CHANGELOG / release notes (#7): none exists; write v1.0 notes for the appcast item and GitHub release (do this alongside the DMG).
+- [v1.0] CHANGELOG / release notes (#7): **drafted 2026-11-13 in `CHANGELOG.md`** — paste the 1.0 section into the GitHub Release body on release day.
 - [v1.1] Split `Thumbnail/ThumbnailStripView.swift` (720 lines, over the 500 guideline) (#8).
 - [v1.1] Command-Comma opens nothing — no Settings scene; arguably correct since settings live in the inspector (#9). Decide, don't build by default.
 - [v1.1] Add a justification comment to `CancellableGenerator` `@unchecked Sendable` in `Thumbnail/ThumbnailRenderer.swift:16` (pipeline copy has one) (#11).
