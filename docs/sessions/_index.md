@@ -2,6 +2,7 @@
 
 | Date | Focus |
 |------|-------|
+| [2026-11-13](2026-11-13.md) | Released Stills From Video 1.0: switched Sparkle key to `eH6j…` (this Mac's), fixed release.sh notary profile + pipefail, notarized DMG on GitHub Release `v1.0`, signed appcast live; CHANGELOG drafted. Next: clean-account smoke test (Interval export), portal page via AppWebsites. 10 Backlog / 1 Inbox. |
 | [2026-11-12](2026-11-12.md) | `/check ship` (0 code blockers) → v1.0 Active plan + v1.1 Backlog. Export-failure fix (#4) and Icon Composer icon built and user-passed; first release renumbered 1.0 / build 1000 (13th). Next: Website link (publish or remove), then DMG on the Sparkle-key Mac or without auto-update. 10 Backlog / 1 Inbox. |
 | [2026-11-09](2026-11-09.md) | Step 4: Appearance menu (Match System / Light / Dark) with a full light theme, user-accepted. Feedback and tips were already live via `apps.json`; published a shared portal privacy page with a `/privacy` stub, and fixed Magpie's feedback claim. Next: `/check ship`. 5 Backlog / 1 Inbox. |
 | [2026-11-08](2026-11-08.md) | App-citizenship pass: v3 icon (scaled to sibling grid), Send Feedback / Leave a Tip / About via AppCitizenshipKit, Help menu with 9 topics (Command-?), `.app` renamed to "Stills From Video.app"; all pushed to main. Next: step 4 Appearance menu (user picks full Light vs Dark + System). 5 Backlog / 1 Inbox. |

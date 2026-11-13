@@ -467,6 +467,18 @@ Live testing showed an earlier-cell border while the readout reached the clip en
 **Alternatives and consequences:** a ten-total budget can delay visibility during slow fills; changing it would require new source and runtime acceptance. The chosen policy preserves accepted progressive behavior. Each replacement batch starts its own clock; final flushes bypass the streaming interval. Therefore this is neither a global ten-per-second ceiling nor a ten-total limit. Cache-version increments are publication signals, not measured SwiftUI body counts. Original historical evidence remains unchanged; independent source review supports the revised contract, with no fresh runtime count claimed. See [closeout evidence](validation/performance-closeout-2026-11-02/README.md).
 
 
+## 16. Sign updates with the `eH6j…` Sparkle key instead of `o388…`
+**Date:** 2026-11-13 (user-approved)
+
+**Context:** the app embedded the shared `o388…` public key, but the release Mac (M1 Max) holds only `eH6j…` (also used by DiskVerdict). `release.sh` refused to run here, blocking 1.0.
+
+**Decision:** switch `SUPublicEDKey`, `release.sh`, `sign-for-sparkle.sh` and docs to `eH6j…` before 1.0 shipped. Notarize with the existing `DiskVerdict` notarytool profile.
+
+**Alternatives:** release from the Mac holding `o388…` (inactive for about a month); import `o388…` here (backup not at hand); ship 1.0 without an appcast item.
+
+**Consequences:** safe because no installed copy carried `o388…`. Every future release must be signed with `eH6j…`; losing that key means users must update manually once. `docs/sparkle-signing.md` records the switch.
+
+
 ### Performance pass closeout — November 6, 2026
 
 Decisions 11–15 are the retained implementation contract: leaf-owned raw player time, cache-version-aware cell equality, latest-intent single-flight seeking, measured visible demand, bounded fresh-generator retry and the explicitly revised progressive-refresh policy. Decision 8 continues to reject shared-generator reuse; a batch-ID guard was tried and reverted, not a successful optimization.
