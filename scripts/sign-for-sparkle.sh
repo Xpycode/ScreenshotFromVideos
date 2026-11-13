@@ -27,8 +27,8 @@ DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData"
 SPARKLE_BIN=$(find "$DERIVED_DATA" -path "*$PROJECT_NAME*/SourcePackages/artifacts/sparkle/Sparkle/bin" -type d 2>/dev/null | head -1)
 [ -n "$SPARKLE_BIN" ] || { echo "❌ Sparkle tools not found. Build once in Xcode first."; exit 1; }
 
-# Sanity: the Keychain key must be the o388… key
-EXPECTED_KEY="o388Mk7QoQjHQ7PBDGrTQ13HkqvO1nyzkfcnmfVumUQ="
+# Sanity: the Keychain key must be the eH6j… key
+EXPECTED_KEY="eH6joIk0G+i5Hur25e/9B4hF3jN8q5lBqXzMxuOfcxw="
 ACTUAL_KEY=$("$SPARKLE_BIN/generate_keys" -p 2>/dev/null || true)
 [ "$ACTUAL_KEY" = "$EXPECTED_KEY" ] || { echo "❌ Wrong/no signing key in Keychain (${ACTUAL_KEY:-none}). See docs/sparkle-signing.md."; exit 1; }
 

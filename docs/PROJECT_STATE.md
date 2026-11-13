@@ -36,7 +36,7 @@ macOS app that extracts still frames from a video as PNGs — every Nth frame or
 
 ## Infrastructure
 - **Remote:** public GitHub `origin` → https://github.com/Xpycode/ScreenshotFromVideos (`main` tracking).
-- **Signing on this Mac:** holds the Developer ID cert `GREGOR MÜLLER (FDMSRXXN73)` (can notarize a DMG) but NOT the Sparkle `o388…` auto-update private key — so `scripts/release.sh` refuses here; an auto-update release must be cut on the Mac holding `o388…`. Local dev builds need ad-hoc signing (`CODE_SIGN_IDENTITY="-"`) — no Apple Development cert here. Bump `CURRENT_PROJECT_VERSION` every release (house scheme: 1.0 → 1000, 1.1 → 1100).
+- **Signing on this Mac:** holds the Developer ID cert `GREGOR MÜLLER (FDMSRXXN73)` (can notarize a DMG) but NOT the Sparkle `eH6j…` auto-update private key — so `scripts/release.sh` refuses here; an auto-update release must be cut on the Mac holding `eH6j…`. Local dev builds need ad-hoc signing (`CODE_SIGN_IDENTITY="-"`) — no Apple Development cert here. Bump `CURRENT_PROJECT_VERSION` every release (house scheme: 1.0 → 1000, 1.1 → 1100).
 - **Build:** xcodegen drives the `.xcodeproj` from `01_Project/project.yml`; run `cd 01_Project && xcodegen generate` after adding/moving any `.swift` file.
 
 ## Detail (read only if needed)

@@ -2,7 +2,7 @@
 set -e
 
 # Stills From Video — Release Script
-# Run on the Mac that holds the o388… Sparkle private key (see docs/sparkle-signing.md)
+# Run on the Mac that holds the eH6j… Sparkle private key (see docs/sparkle-signing.md)
 # and a notarytool keychain profile (see docs/RELEASE.md).
 #
 # Usage: ./scripts/release.sh [version]
@@ -50,13 +50,13 @@ if [ -z "$SPARKLE_BIN" ]; then
 fi
 
 # --- Verify the signing key on THIS Mac is the expected one ---
-EXPECTED_KEY="o388Mk7QoQjHQ7PBDGrTQ13HkqvO1nyzkfcnmfVumUQ="
+EXPECTED_KEY="eH6joIk0G+i5Hur25e/9B4hF3jN8q5lBqXzMxuOfcxw="
 ACTUAL_KEY=$("$SPARKLE_BIN/generate_keys" -p 2>/dev/null || true)
 if [ "$ACTUAL_KEY" != "$EXPECTED_KEY" ]; then
     echo "❌ Sparkle private key mismatch."
     echo "   Keychain public key: ${ACTUAL_KEY:-<none found>}"
     echo "   Expected:            $EXPECTED_KEY"
-    echo "   Import the o388… key first — see docs/sparkle-signing.md."
+    echo "   Import the eH6j… key first — see docs/sparkle-signing.md."
     exit 1
 fi
 echo "✅ Signing key verified ($EXPECTED_KEY)"

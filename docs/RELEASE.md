@@ -1,6 +1,6 @@
 # Release Runbook — Stills From Video
 
-End-to-end steps to ship a release. **Run on the Mac that holds the `o388…`
+End-to-end steps to ship a release. **Run on the Mac that holds the `eH6j…`
 Sparkle private key** (see `docs/sparkle-signing.md`). The Mac this repo was
 last edited on does **not** have that key.
 
@@ -11,10 +11,10 @@ last edited on does **not** have that key.
 1. **Developer ID cert** — import `99-AUTH/AppleDevCertM1max.p12` into the login
    Keychain (needed for the `developer-id` export signing).
 
-2. **Sparkle key** — confirm the `o388…` key is present:
+2. **Sparkle key** — confirm the `eH6j…` key is present:
    ```bash
    GK=$(find ~/Library/Developer/Xcode/DerivedData -path "*Sparkle/bin/generate_keys" | head -1)
-   "$GK" -p     # must print o388Mk7QoQjHQ7PBDGrTQ13HkqvO1nyzkfcnmfVumUQ=
+   "$GK" -p     # must print eH6joIk0G+i5Hur25e/9B4hF3jN8q5lBqXzMxuOfcxw=
    ```
    If it doesn't, import it (`"$GK" -f <backup>`), per `docs/sparkle-signing.md`.
 
@@ -80,7 +80,7 @@ whatever is on `main`.
 - Fresh download → open DMG → drag to Applications → launch → no Gatekeeper
   warning (notarization stapled correctly).
 - On a machine running the previous version: **Check for Updates…** offers the
-  new one and installs it (proves the signature validates against `o388…`).
+  new one and installs it (proves the signature validates against `eH6j…`).
 
 ---
 

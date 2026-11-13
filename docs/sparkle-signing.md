@@ -3,14 +3,13 @@
 ## Key Info
 
 - **Algorithm:** EdDSA (Ed25519)
-- **Key:** the shared **Xpycode `o388…` group key** (created 2025-12-02)
-- **Also used by:** CropBatch (published), AspectRatioUnifier, QuickMotion
-- **Authoritative origin doc:** `_Published/CropBatch/05_Docs/sparkle-signing.md`
+- **Key:** the **`eH6j…` key** (also DiskVerdict, syncthingStatus)
+- **History:** switched from the `o388…` group key on 2026-11-13, before 1.0 shipped (no installs carried `o388…`), because the M1 Max release Mac holds `eH6j…` and not `o388…`.
 
 ## Public Key (baked into Info.plist via project.yml)
 
 ```
-o388Mk7QoQjHQ7PBDGrTQ13HkqvO1nyzkfcnmfVumUQ=
+eH6joIk0G+i5Hur25e/9B4hF3jN8q5lBqXzMxuOfcxw=
 ```
 
 Set in `01_Project/project.yml` → `targets.ScreenshotFromVideos.info.properties.SUPublicEDKey`
@@ -24,22 +23,21 @@ Feed: `https://raw.githubusercontent.com/Xpycode/ScreenshotFromVideos/main/appca
   (`login.keychain-db`, service `https://sparkle-project.org`, account `ed25519`).
 - **Backup:** that Mac's `~/.sparkle-keys/private-key.txt`.
 
-⚠️ **The `o388…` private key is NOT on every Mac.** Verified 2026-06-12: the Mac at
-this repo path has **no** `o388…` key (its `~/.sparkle-keys/` holds only the Penumbra
-`SGiY…` key). **Release from the Mac that has `o388…`, or import it first.**
+⚠️ **Verified 2026-11-13: the M1 Max holds `eH6j…`** in its Keychain. On any other Mac,
+check with `generate_keys -p` and import the key first if it's missing.
 
 ## Import the key onto a release Mac (if missing)
 
 ```bash
 GK=$(find ~/Library/Developer/Xcode/DerivedData -path "*Sparkle/bin/generate_keys" | head -1)
 "$GK" -p                       # what's currently in this Mac's Keychain?
-# If not o388…, bring the backup file over from the Xpycode release Mac, then:
+# If not eH6j…, bring the backup file over from the Xpycode release Mac, then:
 "$GK" -f /path/to/private-key.txt
-"$GK" -p                       # must now print o388Mk7QoQjHQ7PBDGrTQ13HkqvO1nyzkfcnmfVumUQ=
+"$GK" -p                       # must now print eH6joIk0G+i5Hur25e/9B4hF3jN8q5lBqXzMxuOfcxw=
 ```
 
 `scripts/release.sh` and `scripts/sign-for-sparkle.sh` both refuse to run unless
-the Keychain key matches `o388…`, so a wrong-Mac release fails loudly instead of
+the Keychain key matches `eH6j…`, so a wrong-Mac release fails loudly instead of
 shipping an unverifiable update.
 
 ## Signing
