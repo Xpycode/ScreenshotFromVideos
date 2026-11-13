@@ -2,7 +2,7 @@
 
 | Date | Focus |
 |------|-------|
-| [2026-11-12](2026-11-12.md) | `/check ship` for v0.1: 0 code blockers, 3 release gates not run; findings captured as the v0.1 Active plan + v1.1 Backlog. Built an export-failure fix (#4, user test pending) and wired the Icon Composer `.icon` to end the Dock grey tile. Next: user-test #4, Website link, DMG on the Sparkle-key Mac. 11 Backlog / 1 Inbox. |
+| [2026-11-12](2026-11-12.md) | `/check ship` (0 code blockers) → v1.0 Active plan + v1.1 Backlog. Export-failure fix (#4) and Icon Composer icon built and user-passed; first release renumbered 1.0 / build 1000 (13th). Next: Website link (publish or remove), then DMG on the Sparkle-key Mac or without auto-update. 10 Backlog / 1 Inbox. |
 | [2026-11-09](2026-11-09.md) | Step 4: Appearance menu (Match System / Light / Dark) with a full light theme, user-accepted. Feedback and tips were already live via `apps.json`; published a shared portal privacy page with a `/privacy` stub, and fixed Magpie's feedback claim. Next: `/check ship`. 5 Backlog / 1 Inbox. |
 | [2026-11-08](2026-11-08.md) | App-citizenship pass: v3 icon (scaled to sibling grid), Send Feedback / Leave a Tip / About via AppCitizenshipKit, Help menu with 9 topics (Command-?), `.app` renamed to "Stills From Video.app"; all pushed to main. Next: step 4 Appearance menu (user picks full Light vs Dark + System). 5 Backlog / 1 Inbox. |
 | [2026-11-07](2026-11-07.md) | Pre-clear handoff: compact footer and native tooltip checks accepted, separate local checkpoint complete. Next suggested task: selected icon integration; 6 Backlog / 1 Inbox preserved. |
