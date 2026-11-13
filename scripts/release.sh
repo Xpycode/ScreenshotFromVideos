@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 # Stills From Video — Release Script
 # Run on the Mac that holds the eH6j… Sparkle private key (see docs/sparkle-signing.md)
@@ -43,7 +43,7 @@ echo "✅ Project regenerated"
 
 # --- Sparkle tools (present after the project has resolved packages once) ---
 DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData"
-SPARKLE_BIN=$(find "$DERIVED_DATA" -path "*$PROJECT_NAME*/SourcePackages/artifacts/sparkle/Sparkle/bin" -type d 2>/dev/null | head -1)
+SPARKLE_BIN=$(find "$DERIVED_DATA" -path "*$PROJECT_NAME*/SourcePackages/artifacts/sparkle/Sparkle/bin" -type d 2>/dev/null | head -1 || true)
 if [ -z "$SPARKLE_BIN" ]; then
     echo "❌ Sparkle tools not found. Build the project in Xcode once first to resolve packages."
     exit 1
@@ -115,7 +115,7 @@ echo "✅ DMG created: $DMG_PATH"
 echo ""
 echo "🔏 Step 4: Notarizing (a few minutes)..."
 xcrun notarytool submit "$DMG_PATH" \
-    --keychain-profile "notarytool" \
+    --keychain-profile "${NOTARY_PROFILE:-DiskVerdict}" \
     --wait 2>&1 | tee "$BUILD/notarize.log"
 xcrun stapler staple "$DMG_PATH"
 echo "✅ Notarized + stapled"
